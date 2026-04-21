@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { mockDB, dbService } from '../mockDB';
 import { useAuth } from '../AuthContext';
-import { ShoppingBag, ArrowLeft, Settings, Star, Clock, MapPin, Tag, ChevronRight } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, Settings, Star, Clock, MapPin, Tag, ChevronRight, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function CustomerApp() {
@@ -14,10 +14,11 @@ export default function CustomerApp() {
   const [selectedMerchant, setSelectedMerchant] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
   const [cart, setCart] = useState([]);
-  const [cartOpen, setCartOpen] = useState(false);
   
   const [selectedAddress, setSelectedAddress] = useState(user.addresses?.[0] || '');
   const [customAddress, setCustomAddress] = useState('');
+
+  const [checkoutStep, setCheckoutStep] = useState(0); // 0: off, 1: review, 2: delivery, 3: payment
 
   useEffect(() => {
     setMerchants(mockDB.merchants);
@@ -38,6 +39,7 @@ export default function CustomerApp() {
   const activeOffer = selectedMerchant ? (offers.find(o => o.merchantId === selectedMerchant.userId) || offers.find(o => o.merchantId === 'ALL')) : null;
   
   const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
+  const deliveryFee = cart.length > 0 ? 40 : 0; // Flat ₹40 delivery
   let discountAmount = 0;
   if (activeOffer && cart.length > 0) {
       if (activeOffer.type === 'PERCENTAGE') {
@@ -47,17 +49,11 @@ export default function CustomerApp() {
       }
       if (discountAmount > subtotal) discountAmount = subtotal;
   }
-  const finalTotal = subtotal - discountAmount;
+  const finalTotal = subtotal + deliveryFee - discountAmount;
 
-  const checkout = async () => {
-    if(cart.length === 0) return;
-    
+  const handlePlaceOrder = async () => {
     const finalAddress = selectedAddress === 'custom' ? customAddress : selectedAddress;
-    if(!finalAddress) {
-        alert("Please provide a delivery address.");
-        return;
-    }
-
+    
     const orderData = {
       customerId: user.id,
       merchantId: selectedMerchant.userId,
@@ -68,13 +64,13 @@ export default function CustomerApp() {
     
     await dbService.placeOrder(orderData);
     setCart([]);
-    setCartOpen(false);
-    alert('Order placed successfully! The merchant has been notified.');
+    setCheckoutStep(0);
+    alert('Order placed successfully! 🚀');
     setSelectedMerchant(null); 
   };
 
   const TopNav = () => (
-    <div className="glass-nav" style={{ position: 'sticky', top: 0, zIndex: 100, padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '-24px -24px 24px -24px' }}>
+    <div className="glass-nav" style={{ position: 'sticky', top: 0, zIndex: 100, padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '-24px -24px 24px -24px' }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>Delivering to</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
@@ -88,12 +84,136 @@ export default function CustomerApp() {
     </div>
   );
 
+  // 3-Step Checkout Modal
+  if (checkoutStep > 0) {
+    return (
+      <div className="animate-fade-in" style={{ position: 'fixed', inset: 0, background: 'var(--bg-color)', zIndex: 200, padding: '24px', overflowY: 'auto' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+          <button className="btn btn-outline" style={{ marginBottom: '24px', borderRadius: 'var(--radius-full)' }} onClick={() => setCheckoutStep(0)}>
+              <ArrowLeft size={16} /> Back to Menu
+          </button>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '32px', position: 'relative' }}>
+             <div style={{ position: 'absolute', top: '12px', left: 0, right: 0, height: '2px', background: 'var(--border)', zIndex: 0 }} />
+             <div style={{ position: 'absolute', top: '12px', left: 0, width: checkoutStep === 1 ? '33%' : checkoutStep === 2 ? '66%' : '100%', height: '2px', background: 'var(--primary)', zIndex: 0, transition: 'width 0.3s ease' }} />
+             
+             {[1, 2, 3].map(step => (
+               <div key={step} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 1, gap: '8px' }}>
+                 <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: step <= checkoutStep ? 'var(--primary)' : 'var(--surface)', border: `2px solid ${step <= checkoutStep ? 'var(--primary)' : 'var(--border)'}`, color: step <= checkoutStep ? 'white' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '13px', transition: 'all 0.3s' }}>
+                   {step}
+                 </div>
+                 <span style={{ fontSize: '12px', fontWeight: step <= checkoutStep ? '700' : '500', color: step <= checkoutStep ? 'var(--text-main)' : 'var(--text-secondary)' }}>
+                   {step === 1 ? 'Review' : step === 2 ? 'Delivery' : 'Payment'}
+                 </span>
+               </div>
+             ))}
+          </div>
+
+          <div className="card animate-fade-in-up">
+            {checkoutStep === 1 && (
+              <div>
+                <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '20px' }}>Review your order</h2>
+                <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '12px', marginBottom: '24px' }}>
+                  {cart.map((c, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px dashed var(--border)', marginBottom: '12px', fontWeight: '500' }}>
+                      <span>1x {c.name}</span>
+                      <span>₹{c.price.toFixed(2)}</span>
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                    <span>Item Total</span>
+                    <span>₹{subtotal.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                    <span>Delivery Fee</span>
+                    <span>₹{deliveryFee.toFixed(2)}</span>
+                  </div>
+                  {activeOffer && discountAmount > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#10B981', fontWeight: '700', marginBottom: '8px' }}>
+                    <span>Discount ({activeOffer.code})</span>
+                    <span>-₹{discountAmount.toFixed(2)}</span>
+                  </div>
+                  )}
+                  <div style={{ borderTop: '1px solid var(--border)', margin: '12px 0' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '800', fontSize: '20px' }}>
+                    <span>Grand Total</span>
+                    <span style={{ color: 'var(--primary)' }}>₹{finalTotal.toFixed(2)}</span>
+                  </div>
+                </div>
+                <button className="btn btn-primary" style={{ width: '100%', padding: '16px', fontSize: '16px' }} onClick={() => setCheckoutStep(2)}>
+                   Confirm Items & Proceed
+                </button>
+              </div>
+            )}
+
+            {checkoutStep === 2 && (
+              <div>
+                <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '8px' }}>Where to deliver?</h2>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '20px' }}>Select an existing address or enter a new one.</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                   {user.addresses?.map((addr, idx) => (
+                     <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', border: `2px solid ${selectedAddress === addr ? 'var(--primary)' : 'var(--border)'}`, borderRadius: '12px', cursor: 'pointer', background: selectedAddress === addr ? 'var(--primary-light)' : 'var(--surface)' }}>
+                       <input type="radio" name="address" checked={selectedAddress === addr} onChange={() => setSelectedAddress(addr)} style={{ width: 'auto' }} />
+                       <span style={{ fontWeight: '500' }}>{addr}</span>
+                     </label>
+                   ))}
+                   <label style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', border: `2px solid ${selectedAddress === 'custom' ? 'var(--primary)' : 'var(--border)'}`, borderRadius: '12px', cursor: 'pointer', background: selectedAddress === 'custom' ? 'var(--primary-light)' : 'var(--surface)' }}>
+                     <input type="radio" name="address" checked={selectedAddress === 'custom'} onChange={() => setSelectedAddress('custom')} style={{ width: 'auto' }} />
+                     <span style={{ fontWeight: '500' }}>Deliver to a different address...</span>
+                   </label>
+                   {selectedAddress === 'custom' && (
+                     <textarea 
+                        className="animate-fade-in"
+                        rows={3}
+                        placeholder="Enter full address details, landmarks, etc." 
+                        value={customAddress} 
+                        onChange={e=>setCustomAddress(e.target.value)} 
+                        style={{ padding: '16px', borderRadius: '12px' }}
+                     />
+                   )}
+                </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button className="btn btn-outline" style={{ flex: 1, padding: '16px' }} onClick={() => setCheckoutStep(1)}>Back</button>
+                  <button className="btn btn-primary" style={{ flex: 2, padding: '16px', fontSize: '16px' }} onClick={() => {
+                    if(selectedAddress === 'custom' && !customAddress.trim()) { alert('Please enter an address'); return; }
+                    if(!selectedAddress) { alert('Please select an address'); return; }
+                    setCheckoutStep(3);
+                  }}>
+                     Continue to Payment
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {checkoutStep === 3 && (
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ margin: '0 auto 24px', width: '80px', height: '80px', borderRadius: '50%', background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <CheckCircle size={40} color="var(--primary)" />
+                </div>
+                <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '12px' }}>Ready to place order</h2>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', fontSize: '16px' }}>You are about to pay <strong style={{ color: 'var(--text-main)' }}>₹{finalTotal.toFixed(2)}</strong> via secure checkout.</p>
+                
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button className="btn btn-outline" style={{ flex: 1, padding: '16px' }} onClick={() => setCheckoutStep(2)}>Back</button>
+                  <button className="btn btn-primary" style={{ flex: 2, padding: '16px', fontSize: '18px', background: '#10B981', boxShadow: 'none' }} onClick={handlePlaceOrder}>
+                     Pay & Place Order
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Merchant Detail (Cart View)
   if (selectedMerchant) {
     const merchantImage = selectedMerchant.imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1200&auto=format&fit=crop';
     return (
       <div className="animate-fade-in">
         <TopNav />
-        <div className="layout-cart" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 340px', gap: '32px' }}>
+        <div className="layout-cart" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 360px', gap: '32px' }}>
           <div>
             <button className="btn btn-outline" style={{ marginBottom: '24px', borderRadius: 'var(--radius-full)' }} onClick={() => setSelectedMerchant(null)}>
               <ArrowLeft size={16} /> Back
@@ -129,7 +249,7 @@ export default function CustomerApp() {
                     <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '16px', lineHeight: '1.4' }}>{item.description}</p>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '16px' }}>
-                     <span style={{ fontWeight: '800', fontSize: '20px', color: 'var(--text-main)' }}>${item.price.toFixed(2)}</span>
+                     <span style={{ fontWeight: '800', fontSize: '20px', color: 'var(--text-main)' }}>₹{item.price.toFixed(2)}</span>
                      {item.isAvailable ? (
                        <button className="btn btn-primary" style={{ padding: '8px 20px', borderRadius: 'var(--radius-full)' }} onClick={() => addToCart(item)}>Add</button>
                      ) : (
@@ -151,7 +271,7 @@ export default function CustomerApp() {
              {cart.length === 0 ? (
                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-secondary)' }}>
                  <ShoppingBag size={48} style={{ opacity: 0.2, margin: '0 auto 16px auto' }} />
-                 <p style={{ fontSize: '15px' }}>Your cart is hungry.</p>
+                 <p style={{ fontSize: '15px' }}>Your cart is empty.</p>
                </div>
              ) : (
                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -159,50 +279,31 @@ export default function CustomerApp() {
                    {cart.map((c, i) => (
                      <div key={i} className="animate-fade-in" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', paddingBottom: '12px', borderBottom: '1px dashed var(--border)', marginBottom: '12px' }}>
                        <span style={{ fontWeight: '500' }}>1x {c.name}</span>
-                       <span style={{ fontWeight: '600' }}>${c.price.toFixed(2)}</span>
+                       <span style={{ fontWeight: '600' }}>₹{c.price.toFixed(2)}</span>
                      </div>
                    ))}
                  </div>
 
                  <div style={{ background: 'var(--surface)', padding: '16px', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                       <span>Subtotal</span>
-                       <span style={{ color: 'var(--text-main)', fontWeight: '500' }}>${subtotal.toFixed(2)}</span>
+                       <span>Item Total</span>
+                       <span style={{ color: 'var(--text-main)', fontWeight: '500' }}>₹{subtotal.toFixed(2)}</span>
                      </div>
                      {activeOffer && discountAmount > 0 && (
                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#10B981', fontWeight: '700' }}>
                        <span>Discount ({activeOffer.code})</span>
-                       <span>-${discountAmount.toFixed(2)}</span>
+                       <span>-₹{discountAmount.toFixed(2)}</span>
                      </div>
                      )}
                      <div style={{ borderTop: '1px solid var(--border)', margin: '4px 0' }} />
-                     <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '800', fontSize: '22px' }}>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '800', fontSize: '20px' }}>
                        <span>Total</span>
-                       <span style={{ color: 'var(--primary)' }}>${finalTotal.toFixed(2)}</span>
+                       <span style={{ color: 'var(--primary)' }}>₹{(subtotal - discountAmount).toFixed(2)}</span>
                      </div>
                  </div>
-                 
-                 {/* Address Selection with style enhancement */}
-                 <div style={{ marginTop: '8px' }}>
-                    <label style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px', display: 'block' }}>Delivery Location</label>
-                    <select value={selectedAddress} onChange={e=>setSelectedAddress(e.target.value)} style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)' }}>
-                        {user.addresses?.map((addr, idx) => (
-                            <option key={idx} value={addr}>{addr}</option>
-                        ))}
-                        <option value="custom">Enter new address...</option>
-                    </select>
-                    {selectedAddress === 'custom' && (
-                        <input 
-                           style={{ marginTop: '12px', background: 'var(--surface)' }} 
-                           placeholder="Type full address..." 
-                           value={customAddress} 
-                           onChange={e=>setCustomAddress(e.target.value)} 
-                        />
-                    )}
-                 </div>
 
-                 <button className="btn btn-primary" style={{ width: '100%', marginTop: '16px', padding: '16px', fontSize: '16px' }} onClick={checkout}>
-                    Confirm & Pay
+                 <button className="btn btn-primary" style={{ width: '100%', marginTop: '8px', padding: '16px', fontSize: '16px' }} onClick={() => setCheckoutStep(1)}>
+                    Proceed to Checkout
                  </button>
                </div>
              )}
@@ -212,6 +313,7 @@ export default function CustomerApp() {
     );
   }
 
+  // Initial Home Page
   return (
     <div className="animate-fade-in" style={{ padding: '0 8px' }}>
       <TopNav />

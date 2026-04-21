@@ -172,7 +172,7 @@ export default function SuperAdminDashboard() {
 
   const handleAddOffer = (e) => {
     e.preventDefault();
-    const discountText = newOfferType === 'PERCENTAGE' ? `${newOfferAmount}% OFF` : `$${newOfferAmount} OFF`;
+    const discountText = newOfferType === 'PERCENTAGE' ? `${newOfferAmount}% OFF` : `₹${newOfferAmount} OFF`;
     const o = { 
       id: 'off_'+Date.now(), 
       merchantId: newOfferMerchantId, 
@@ -232,7 +232,7 @@ export default function SuperAdminDashboard() {
          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '32px' }}>
              <div style={{ background: 'white', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '4px' }}><DollarSign size={16}/> Total Revenue</p>
-                <div style={{ fontSize: '28px', fontWeight: 'bold' }}>${stats.totalRevenue.toFixed(2)}</div>
+                <div style={{ fontSize: '28px', fontWeight: 'bold' }}>₹{stats.totalRevenue.toFixed(2)}</div>
              </div>
              <div style={{ background: 'white', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '4px' }}><ShoppingBag size={16}/> Total Orders Processed</p>
@@ -240,7 +240,7 @@ export default function SuperAdminDashboard() {
              </div>
              <div style={{ background: 'white', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '4px' }}><TrendingUp size={16}/> Avg Order Value</p>
-                <div style={{ fontSize: '28px', fontWeight: 'bold' }}>${stats.aov.toFixed(2)}</div>
+                <div style={{ fontSize: '28px', fontWeight: 'bold' }}>₹{stats.aov.toFixed(2)}</div>
              </div>
          </div>
 
@@ -275,7 +275,7 @@ export default function SuperAdminDashboard() {
                       <tr key={idx} style={{ borderBottom: '1px solid var(--border)' }}>
                         <td style={{ padding: '8px', fontWeight: '500' }}>{ms.name}</td>
                         <td style={{ padding: '8px' }}>{ms.orders}</td>
-                        <td style={{ padding: '8px', textAlign: 'right', fontWeight: 'bold' }}>${ms.revenue.toFixed(2)}</td>
+                        <td style={{ padding: '8px', textAlign: 'right', fontWeight: 'bold' }}>₹{ms.revenue.toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -403,7 +403,7 @@ export default function SuperAdminDashboard() {
               </select>
               <select value={newOfferType} onChange={e => setNewOfferType(e.target.value)} style={{ width: '130px' }}>
                  <option value="PERCENTAGE">% Percentage</option>
-                 <option value="FLAT">$ Flat Rate</option>
+                 <option value="FLAT">₹ Flat Rate</option>
               </select>
               <input type="number" placeholder="Amount" value={newOfferAmount} onChange={e => setNewOfferAmount(e.target.value)} style={{ width: '100px' }} min="1" required />
               <input placeholder="Promo Code (e.g. SAVE20)" value={newOfferCode} onChange={e => setNewOfferCode(e.target.value)} style={{ flex: '1 1 150px' }} required />

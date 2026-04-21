@@ -26,7 +26,7 @@ export const mockDB = {
       { id: 'b2', imageUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1200&auto=format&fit=crop', link: '#', isActive: true }
   ],
   offers: [
-      { id: 'off1', merchantId: '4', type: 'FLAT', amount: 5, discountText: '$5 OFF YOUR FIRST ORDER', code: 'PIZZA5' },
+      { id: 'off1', merchantId: '4', type: 'FLAT', amount: 5, discountText: '₹5 OFF YOUR FIRST ORDER', code: 'PIZZA5' },
       { id: 'off2', merchantId: 'ALL', type: 'PERCENTAGE', amount: 10, discountText: '10% OFF MONDAY MADNESS', code: 'MONDAY10' }
   ],
   orders: []
@@ -101,6 +101,13 @@ export const dbService = {
       setTimeout(() => {
         resolve(mockDB.orders.filter(o => o.merchantId === merchantId));
       }, SIMULATED_LATENCY);
+    });
+  },
+  getOrdersForCustomer: async (customerId) => {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve(mockDB.orders.filter(o => o.customerId === customerId).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)));
+        }, SIMULATED_LATENCY);
     });
   },
   getAllOrders: async () => {

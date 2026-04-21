@@ -168,7 +168,7 @@ export default function MerchantDashboard() {
         <div className="card" style={{ background: '#FFF7F2', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
            <div>
              <h3 style={{ fontSize: '18px', color: 'var(--text-secondary)', marginBottom: '8px' }}>Daily Total Sale</h3>
-             <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--primary)' }}>${dailySales.toFixed(2)}</div>
+             <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--primary)' }}>₹{dailySales.toFixed(2)}</div>
            </div>
            <div style={{ padding: '16px', background: 'white', borderRadius: '50%', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
              <TrendingUp size={32} color="var(--primary)" />
@@ -208,7 +208,7 @@ export default function MerchantDashboard() {
                     {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                  </select>
                  <input placeholder="Item Name" value={newItem.name} onChange={e=>setNewItem({...newItem, name: e.target.value})} required style={{ flex: 2 }} />
-                 <input type="number" placeholder="Price ($)" value={newItem.price} onChange={e=>setNewItem({...newItem, price: e.target.value})} required style={{ width: '100px' }} />
+                 <input type="number" placeholder="Price (₹)" value={newItem.price} onChange={e=>setNewItem({...newItem, price: e.target.value})} required style={{ width: '100px' }} />
                </div>
                <div className="form-stack" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                  <ImageIcon size={20} color="var(--text-secondary)" />
@@ -237,7 +237,7 @@ export default function MerchantDashboard() {
                       </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                      <span style={{ fontWeight: 'bold', color: 'var(--primary)', fontSize: '16px' }}>${item.price.toFixed(2)}</span>
+                      <span style={{ fontWeight: 'bold', color: 'var(--primary)', fontSize: '16px' }}>₹{item.price.toFixed(2)}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <span style={{ fontSize: '13px', fontWeight: 'bold', color: item.isAvailable ? '#065F46' : 'var(--text-secondary)' }}>
                            {item.isAvailable ? 'Available' : 'Turned Off'}
@@ -322,7 +322,7 @@ export default function MerchantDashboard() {
               </div>
               <div style={{ fontWeight: 'bold', marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between' }}>
                 <span>Total:</span>
-                <span style={{ color: 'var(--primary)' }}>${order.totalAmount ? order.totalAmount.toFixed(2) : order.items.reduce((s, i) => s + (i.price || 0), 0).toFixed(2)}</span>
+                <span style={{ color: 'var(--primary)' }}>₹{order.totalAmount ? order.totalAmount.toFixed(2) : order.items.reduce((s, i) => s + (i.price || 0), 0).toFixed(2)}</span>
               </div>
             </div>
           ))}
@@ -362,7 +362,7 @@ export default function MerchantDashboard() {
                 {selectedOrder.items.map((i, idx) => (
                   <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: idx !== selectedOrder.items.length - 1 ? '12px' : '0', paddingBottom: idx !== selectedOrder.items.length - 1 ? '12px' : '0', borderBottom: idx !== selectedOrder.items.length - 1 ? '1px solid var(--border)' : 'none' }}>
                     <span style={{ fontWeight: '500' }}>1x {i.name}</span>
-                    <span style={{ fontWeight: 'bold' }}>${i.price?.toFixed(2)}</span>
+                    <span style={{ fontWeight: 'bold' }}>₹{i.price?.toFixed(2)}</span>
                   </div>
                 ))}
               </div>
@@ -370,7 +370,7 @@ export default function MerchantDashboard() {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
               <span style={{ fontSize: '18px', fontWeight: 'bold' }}>Total Amount:</span>
-              <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--primary)' }}>${selectedOrder.totalAmount ? selectedOrder.totalAmount.toFixed(2) : selectedOrder.items.reduce((s, i) => s + (i.price || 0), 0).toFixed(2)}</span>
+              <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--primary)' }}>₹{selectedOrder.totalAmount ? selectedOrder.totalAmount.toFixed(2) : selectedOrder.items.reduce((s, i) => s + (i.price || 0), 0).toFixed(2)}</span>
             </div>
 
             {selectedOrder.status === 'PENDING' && (

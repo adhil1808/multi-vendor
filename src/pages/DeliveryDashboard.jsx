@@ -48,7 +48,7 @@ export default function DeliveryDashboard() {
             <div key={order.id} style={{ border: '1px solid var(--border)', borderRadius: '8px', padding: '16px', background: 'var(--bg-color)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <span style={{ fontWeight: 'bold' }}>Order #{order.id}</span>
-                <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>${order.totalAmount.toFixed(2)}</span>
+                <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>₹{order.totalAmount.toFixed(2)}</span>
               </div>
               <p style={{ fontSize: '14px', marginBottom: '16px', color: 'var(--text-secondary)' }}>Deliver to: {order.deliveryAddress}</p>
               <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => acceptOrder(order.id)}>
