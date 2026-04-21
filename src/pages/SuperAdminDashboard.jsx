@@ -32,8 +32,10 @@ export default function SuperAdminDashboard() {
 
   // Marketing states
   const [newBannerImg, setNewBannerImg] = useState('');
-  const [newOfferMerchantId, setNewOfferMerchantId] = useState('');
-  const [newOfferText, setNewOfferText] = useState('');
+  const [newOfferMerchantId, setNewOfferMerchantId] = useState('ALL');
+  const [newOfferType, setNewOfferType] = useState('PERCENTAGE');
+  const [newOfferAmount, setNewOfferAmount] = useState('');
+  const [newOfferCode, setNewOfferCode] = useState('');
 
   // Delivery creation states
   const [newDeliveryName, setNewDeliveryName] = useState('');
@@ -170,10 +172,19 @@ export default function SuperAdminDashboard() {
 
   const handleAddOffer = (e) => {
     e.preventDefault();
-    const o = { id: 'off'+Date.now(), merchantId: newOfferMerchantId, discountText: newOfferText, code: 'NEWOFFER' };
+    const discountText = newOfferType === 'PERCENTAGE' ? `${newOfferAmount}% OFF` : `$${newOfferAmount} OFF`;
+    const o = { 
+      id: 'off_'+Date.now(), 
+      merchantId: newOfferMerchantId, 
+      type: newOfferType,
+      amount: Number(newOfferAmount),
+      discountText: discountText, 
+      code: newOfferCode 
+    };
     mockDB.offers.push(o);
     setMerchantOffers([...merchantOffers, o]);
-    setNewOfferText('');
+    setNewOfferAmount('');
+    setNewOfferCode('');
   }
 
   const handleDeleteOffer = (id) => {
@@ -383,22 +394,30 @@ export default function SuperAdminDashboard() {
            <h3 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
               <Tag /> Merchant Offers
            </h3>
-           <form onSubmit={handleAddOffer} style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-              <select value={newOfferMerchantId} onChange={e => setNewOfferMerchantId(e.target.value)} style={{ flex: 1 }} required>
-                 <option value="" disabled>Select Merchant...</option>
-                 {merchants.map(m => <option key={m.id} value={m.id}>{m.restaurantName}</option>)}
+           <form onSubmit={handleAddOffer} style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+              <select value={newOfferMerchantId} onChange={e => setNewOfferMerchantId(e.target.value)} style={{ flex: '1 1 200px' }} required>
+                 <option value="ALL">All Restaurants (Global)</option>
+                 <optgroup label="Specific Merchants">
+                    {merchants.map(m => <option key={m.id} value={m.id}>{m.restaurantName}</option>)}
+                 </optgroup>
               </select>
-              <input placeholder="e.g. 50% OFF" value={newOfferText} onChange={e => setNewOfferText(e.target.value)} style={{ flex: 1 }} required />
+              <select value={newOfferType} onChange={e => setNewOfferType(e.target.value)} style={{ width: '130px' }}>
+                 <option value="PERCENTAGE">% Percentage</option>
+                 <option value="FLAT">$ Flat Rate</option>
+              </select>
+              <input type="number" placeholder="Amount" value={newOfferAmount} onChange={e => setNewOfferAmount(e.target.value)} style={{ width: '100px' }} min="1" required />
+              <input placeholder="Promo Code (e.g. SAVE20)" value={newOfferCode} onChange={e => setNewOfferCode(e.target.value)} style={{ flex: '1 1 150px' }} required />
               <button className="btn btn-primary" type="submit"><Plus size={18} /></button>
            </form>
            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {merchantOffers.map(o => {
                 const targetMerchant = merchants.find(m => m.id === o.merchantId);
+                const targetName = o.merchantId === 'ALL' ? 'Global App Offer (All Restaurants)' : (targetMerchant ? targetMerchant.restaurantName : 'Unknown');
                 return (
                  <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid var(--border)', padding: '12px', borderRadius: '8px' }}>
                    <div>
-                      <div style={{ fontWeight: 'bold' }}>{o.discountText}</div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Applies to: {targetMerchant ? targetMerchant.restaurantName : 'Unknown'}</div>
+                      <div style={{ fontWeight: 'bold', fontSize: '16px' }}>{o.discountText} <span style={{fontSize:'12px', background: '#F3F4F6', marginLeft: '8px', padding: '2px 8px', borderRadius: '4px'}}>Code: {o.code}</span></div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>Applies to: {targetName}</div>
                    </div>
                    <button className="btn btn-outline hover-scale" style={{ color: 'red', borderColor: 'red', padding: '4px 8px' }} onClick={() => handleDeleteOffer(o.id)}><Trash2 size={16} /></button>
                  </div>

@@ -35,6 +35,20 @@ export default function CustomerApp() {
     setCart([...cart, item]);
   };
 
+  const activeOffer = selectedMerchant ? (offers.find(o => o.merchantId === selectedMerchant.userId) || offers.find(o => o.merchantId === 'ALL')) : null;
+  
+  const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
+  let discountAmount = 0;
+  if (activeOffer && cart.length > 0) {
+      if (activeOffer.type === 'PERCENTAGE') {
+          discountAmount = subtotal * (activeOffer.amount / 100);
+      } else if (activeOffer.type === 'FLAT') {
+          discountAmount = activeOffer.amount;
+      }
+      if (discountAmount > subtotal) discountAmount = subtotal;
+  }
+  const finalTotal = subtotal - discountAmount;
+
   const checkout = async () => {
     if(cart.length === 0) return;
     
@@ -48,7 +62,7 @@ export default function CustomerApp() {
       customerId: user.id,
       merchantId: selectedMerchant.userId,
       items: cart,
-      totalAmount: cart.reduce((sum, item) => sum + item.price, 0),
+      totalAmount: finalTotal,
       deliveryAddress: finalAddress
     };
     
@@ -115,9 +129,20 @@ export default function CustomerApp() {
                  </div>
                ))}
                <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0' }} />
-               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', marginBottom: '16px' }}>
+               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '8px' }}>
+                 <span>Subtotal</span>
+                 <span>${subtotal.toFixed(2)}</span>
+               </div>
+               {activeOffer && discountAmount > 0 && (
+               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#10B981', marginBottom: '8px', fontWeight: 'bold' }}>
+                 <span>Discount ({activeOffer.code})</span>
+                 <span>-${discountAmount.toFixed(2)}</span>
+               </div>
+               )}
+               <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0' }} />
+               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', marginBottom: '16px', fontSize: '18px' }}>
                  <span>Total</span>
-                 <span>${cart.reduce((s, c) => s + c.price, 0).toFixed(2)}</span>
+                 <span>${finalTotal.toFixed(2)}</span>
                </div>
                
                {/* Address Selection */}
@@ -175,7 +200,7 @@ export default function CustomerApp() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
         {merchants.map(m => {
           // Check for promotional offers dynamically
-          const activeOffer = offers.find(o => o.merchantId === m.userId);
+          const activeOffer = offers.find(o => o.merchantId === m.userId) || offers.find(o => o.merchantId === 'ALL');
           const fallbackImg = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=600&auto=format&fit=crop';
 
           const isClosed = m.openStatus === false;
