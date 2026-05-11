@@ -522,6 +522,13 @@ export default function CustomerApp() {
                    <p style={{ color: 'var(--text-secondary)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                      {m.address}
                    </p>
+                   {m.tags && m.tags.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                         {m.tags.map((tag, tIdx) => (
+                            <span key={tIdx} style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--primary)', background: 'var(--primary-light)', padding: '2px 8px', borderRadius: '4px' }}>{tag}</span>
+                         ))}
+                      </div>
+                   )}
                 </div>
                 <div style={{ background: '#F3F4F6', color: 'var(--text-main)', padding: '6px 10px', borderRadius: 'var(--radius-md)', fontSize: '13px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px' }}>
                    4.5 <Star size={12} fill="#F59E0B" color="#F59E0B" />

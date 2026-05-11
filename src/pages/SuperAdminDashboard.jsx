@@ -51,6 +51,10 @@ export default function SuperAdminDashboard() {
   const [newDeliveryPhone, setNewDeliveryPhone] = useState('');
   const [newDeliveryVehicle, setNewDeliveryVehicle] = useState('');
 
+  // Merchant Editing states
+  const [editingMerchantDetails, setEditingMerchantDetails] = useState(null); // { id, restaurantName, tags: [] }
+  const [tagsInput, setTagsInput] = useState('');
+
   // Merchant Menu Editing states
   const [editingMerchantMenu, setEditingMerchantMenu] = useState(null); // { userId, restaurantName }
   const [merchantMenuTab, setMerchantMenuTab] = useState('view'); // 'view', 'add'
@@ -177,6 +181,26 @@ export default function SuperAdminDashboard() {
       setMerchants(merchants.filter(m => m.userId !== id));
     } catch(err) {
       alert("Error deleting merchant: " + err.message);
+    }
+  };
+
+  const openEditDetails = (merchant) => {
+    setEditingMerchantDetails(merchant);
+    setTagsInput(merchant.tags ? merchant.tags.join(', ') : '');
+  };
+
+  const handleUpdateMerchantDetails = async (e) => {
+    e.preventDefault();
+    const tagsArray = tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
+    try {
+      await updateDoc(doc(db, "merchants", editingMerchantDetails.id), {
+        tags: tagsArray
+      });
+      setMerchants(merchants.map(m => m.id === editingMerchantDetails.id ? { ...m, tags: tagsArray } : m));
+      setEditingMerchantDetails(null);
+      alert("Merchant details updated!");
+    } catch (err) {
+      alert("Failed to update details: " + err.message);
     }
   };
 
