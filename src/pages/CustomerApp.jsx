@@ -79,10 +79,15 @@ export default function CustomerApp() {
 
   const TopNav = () => (
     <div className="glass-nav" style={{ position: 'sticky', top: 0, zIndex: 100, padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '-24px -24px 24px -24px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>Delivering to</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
-                <MapPin size={16} color="var(--primary)" /> 
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--primary)', letterSpacing: '-1px', margin: 0, cursor: 'pointer' }} onClick={() => navigate('/')}>Fooddiees</h1>
+            <div style={{ width: '1px', height: '24px', background: 'var(--border)' }} className="mobile-hide" />
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Delivering to</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
+                    <MapPin size={14} color="var(--primary)" /> 
+                    <span style={{ fontSize: '14px' }}>{user?.addresses?.[0] || 'Home'}</span>
+                </div>
             </div>
         </div>
 
