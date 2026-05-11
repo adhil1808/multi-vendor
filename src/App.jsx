@@ -71,9 +71,15 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/setup-admin" element={<AdminSetup />} />
           
+          <Route path="/" element={<RoleBasedHome />} />
+          <Route path="/customer" element={<CustomerApp />} />
+          <Route path="/customer/profile" element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']}>
+              <CustomerProfile />
+            </ProtectedRoute>
+          } />
+
           <Route element={<Layout />}>
-            <Route path="/" element={<RoleBasedHome />} />
-            
             <Route path="/superadmin" element={
               <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
                 <SuperAdminDashboard />
@@ -89,14 +95,6 @@ function App() {
             <Route path="/delivery" element={
               <ProtectedRoute allowedRoles={['DELIVERY_BOY']}>
                 <DeliveryDashboard />
-              </ProtectedRoute>
-            } />
-
-            <Route path="/customer" element={<CustomerApp />} />
-
-            <Route path="/customer/profile" element={
-              <ProtectedRoute allowedRoles={['CUSTOMER']}>
-                <CustomerProfile />
               </ProtectedRoute>
             } />
           </Route>

@@ -235,8 +235,7 @@ export default function CustomerApp() {
   if (selectedMerchant) {
     const merchantImage = selectedMerchant.imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1200&auto=format&fit=crop';
     return (
-      <div className="animate-fade-in">
-        <TopNav />
+      <div className="animate-fade-in" style={{ padding: '24px' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <button className="btn btn-outline" style={{ marginBottom: '24px', borderRadius: 'var(--radius-full)' }} onClick={() => setSelectedMerchant(null)}>
             <ArrowLeft size={16} /> Back
@@ -403,7 +402,7 @@ export default function CustomerApp() {
 
   // Initial Home Page
   return (
-    <div className="animate-fade-in" style={{ padding: '0 8px' }}>
+    <div className="animate-fade-in" style={{ padding: '0 8px', maxWidth: '1200px', margin: '0 auto' }}>
       <TopNav />
 
       {/* Hero Section */}
