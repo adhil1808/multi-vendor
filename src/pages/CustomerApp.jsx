@@ -19,6 +19,7 @@ export default function CustomerApp() {
   const [customAddress, setCustomAddress] = useState('');
 
   const [checkoutStep, setCheckoutStep] = useState(0); // 0: off, 1: review, 2: delivery, 3: payment
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   useEffect(() => {
     firebaseDBService.getAllMerchants().then(setMerchants);
@@ -78,29 +79,29 @@ export default function CustomerApp() {
 
   const TopNav = () => (
     <div className="glass-nav" style={{ position: 'sticky', top: 0, zIndex: 100, padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '-24px -24px 24px -24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>Delivering to</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
+                <MapPin size={16} color="var(--primary)" /> 
+            </div>
+        </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            {cart.length > 0 && (
-              <div 
-                className="animate-fade-in"
-                style={{ position: 'relative', cursor: 'pointer', background: 'var(--primary-light)', padding: '10px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                onClick={() => setCheckoutStep(1)}
-              >
-                <ShoppingBag size={20} color="var(--primary)" />
+            <div 
+              style={{ position: 'relative', cursor: 'pointer', background: 'var(--primary-light)', padding: '10px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              onClick={() => setIsCartOpen(true)}
+            >
+              <ShoppingBag size={20} color="var(--primary)" />
+              {cart.length > 0 && (
                 <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: 'var(--primary)', color: 'white', borderRadius: '50%', width: '20px', height: '20px', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', border: '2px solid white' }}>
                   {cart.length}
                 </span>
-              </div>
-            )}
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>Delivering to</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
-                    <MapPin size={16} color="var(--primary)" /> 
-                </div>
+              )}
             </div>
+            <button className="btn btn-outline" style={{ padding: '8px 12px', borderRadius: '12px' }} onClick={() => navigate(user ? '/customer/profile' : '/login')}>
+                <Settings size={18} /> <span className="mobile-hide">{user ? 'Profile' : 'Login'}</span>
+            </button>
         </div>
-        <button className="btn btn-outline" style={{ padding: '8px 12px', borderRadius: '12px' }} onClick={() => navigate(user ? '/customer/profile' : '/login')}>
-            <Settings size={18} /> <span className="mobile-hide">{user ? 'Profile' : 'Login'}</span>
-        </button>
     </div>
   );
 
@@ -233,21 +234,20 @@ export default function CustomerApp() {
     return (
       <div className="animate-fade-in">
         <TopNav />
-        <div className="layout-cart" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 360px', gap: '32px' }}>
-          <div>
-            <button className="btn btn-outline" style={{ marginBottom: '24px', borderRadius: 'var(--radius-full)' }} onClick={() => setSelectedMerchant(null)}>
-              <ArrowLeft size={16} /> Back
-            </button>
-            
-            <div className="animate-fade-in-up" style={{ height: '280px', borderRadius: 'var(--radius-xl)', backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0) 100%), url(${merchantImage})`, backgroundSize: 'cover', backgroundPosition: 'center', marginBottom: '40px', color: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '32px', boxShadow: 'var(--shadow-lg)' }}>
-               <h2 style={{ fontSize: '42px', fontWeight: '800', marginBottom: '8px', letterSpacing: '-1px' }}>{selectedMerchant.restaurantName}</h2>
-               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', opacity: 0.9, fontSize: '15px' }}>
-                 <p style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><MapPin size={16} /> {selectedMerchant.address}</p>
-                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: '20px', backdropFilter: 'blur(4px)' }}>
-                     <Star size={14} fill="currentColor" /> 4.8 Excellent
-                 </div>
+        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+          <button className="btn btn-outline" style={{ marginBottom: '24px', borderRadius: 'var(--radius-full)' }} onClick={() => setSelectedMerchant(null)}>
+            <ArrowLeft size={16} /> Back
+          </button>
+          
+          <div className="animate-fade-in-up" style={{ height: '280px', borderRadius: 'var(--radius-xl)', backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0) 100%), url(${merchantImage})`, backgroundSize: 'cover', backgroundPosition: 'center', marginBottom: '40px', color: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '32px', boxShadow: 'var(--shadow-lg)' }}>
+             <h2 style={{ fontSize: '42px', fontWeight: '800', marginBottom: '8px', letterSpacing: '-1px' }}>{selectedMerchant.restaurantName}</h2>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', opacity: 0.9, fontSize: '15px' }}>
+               <p style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><MapPin size={16} /> {selectedMerchant.address}</p>
+               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: '20px', backdropFilter: 'blur(4px)' }}>
+                   <Star size={14} fill="currentColor" /> 4.8 Excellent
                </div>
-            </div>
+             </div>
+          </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
               <h3 style={{ fontSize: '24px', fontWeight: '700' }}>Recommended</h3>
@@ -276,86 +276,85 @@ export default function CustomerApp() {
                        <span style={{ color: '#DC2626', fontWeight: 'bold', fontSize: '13px', padding: '6px 12px', background: '#FEE2E2', borderRadius: 'var(--radius-full)' }}>Unavailable</span>
                      )}
                   </div>
-                </div>
-              ))}
-              {menuItems.length === 0 && <p style={{ color: 'var(--text-secondary)' }}>This merchant hasn't added any items yet.</p>}
+                </div>              {menuItems.length === 0 && <p style={{ color: 'var(--text-secondary)' }}>This merchant hasn't added any items yet.</p>}
             </div>
           </div>
-
-          {/* Beautiful Cart Sidebar */}
-          <div className="glass-panel animate-fade-in-up" style={{ alignSelf: 'start', padding: '28px', border: '1px solid rgba(255, 122, 40, 0.1)', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.05)' }}>
-             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '22px', fontWeight: '800' }}>
-                  <ShoppingBag size={24} color="var(--primary)" /> Your Order
-                </h3>
-                {cart.length > 0 && (
-                  <button 
-                    onClick={() => setCart([])}
-                    style={{ border: 'none', background: 'none', color: '#EF4444', fontSize: '13px', fontWeight: '600', cursor: 'pointer', opacity: 0.8 }}
-                  >
-                    Clear
-                  </button>
-                )}
-             </div>
-             
-             {cart.length === 0 ? (
-               <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-secondary)' }}>
-                 <div style={{ background: 'var(--surface)', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                    <ShoppingBag size={32} style={{ opacity: 0.3 }} />
-                 </div>
-                 <p style={{ fontSize: '16px', fontWeight: '500' }}>Your bag is empty.</p>
-                 <p style={{ fontSize: '13px', marginTop: '4px' }}>Add some delicious items to start!</p>
-               </div>
-             ) : (
-               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  <div style={{ maxHeight: '380px', overflowY: 'auto', paddingRight: '4px' }} className="hide-scrollbar">
-                    {cart.map((c, i) => (
-                      <div key={i} className="animate-fade-in" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px', borderRadius: '16px', marginBottom: '12px', background: 'white', border: '1px solid var(--border)', transition: 'all 0.2s' }}>
-                        <div style={{ flex: 1 }}>
-                          <span style={{ fontWeight: '700', display: 'block', fontSize: '15px', marginBottom: '2px' }}>{c.name}</span>
-                          <span style={{ color: 'var(--primary)', fontWeight: '800', fontSize: '15px' }}>₹{c.price.toFixed(2)}</span>
-                        </div>
-                        <button 
-                          onClick={() => setCart(cart.filter((_, idx) => idx !== i))}
-                          style={{ border: 'none', background: '#FEE2E2', color: '#DC2626', width: '30px', height: '30px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
-                          onMouseEnter={e => e.currentTarget.style.background = '#FECACA'}
-                          onMouseLeave={e => e.currentTarget.style.background = '#FEE2E2'}
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-
-                 <div style={{ background: '#F9FAFB', padding: '20px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--border)' }}>
-                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', color: 'var(--text-secondary)' }}>
-                       <span>Subtotal</span>
-                       <span style={{ color: 'var(--text-main)', fontWeight: '600' }}>₹{subtotal.toFixed(2)}</span>
-                     </div>
-                     {activeOffer && discountAmount > 0 && (
-                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', color: '#10B981', fontWeight: '700' }}>
-                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Tag size={14}/> Promo ({activeOffer.code})</span>
-                       <span>-₹{discountAmount.toFixed(2)}</span>
-                     </div>
-                     )}
-                     <div style={{ borderTop: '1px dashed #D1D5DB', margin: '6px 0' }} />
-                     <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '900', fontSize: '22px', color: 'var(--text-main)' }}>
-                       <span>Total</span>
-                       <span style={{ color: 'var(--primary)' }}>₹{(subtotal - discountAmount).toFixed(2)}</span>
-                     </div>
-                 </div>
-
-                 <button 
-                    className="btn btn-primary hover-scale" 
-                    style={{ width: '100%', marginTop: '10px', padding: '18px', fontSize: '17px', fontWeight: '800', borderRadius: '18px', boxShadow: '0 10px 20px -5px rgba(255, 122, 40, 0.4)' }} 
-                    onClick={() => setCheckoutStep(1)}
-                 >
-                    Checkout Now
-                 </button>
-               </div>
-             )}
-          </div>
         </div>
+
+        {/* Cart Slide-out Drawer */}
+        {isCartOpen && (
+          <div 
+            className="animate-fade-in"
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', justifyContent: 'flex-end' }}
+            onClick={() => setIsCartOpen(false)}
+          >
+            <div 
+              className="animate-slide-left"
+              style={{ width: 'min(400px, 100%)', background: 'var(--bg-color)', height: '100%', padding: '32px', boxShadow: '-10px 0 30px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column' }}
+              onClick={e => e.stopPropagation()}
+            >
+               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '24px', fontWeight: '800' }}>
+                    <ShoppingBag size={28} color="var(--primary)" /> Your Order
+                  </h3>
+                  <button 
+                    onClick={() => setIsCartOpen(false)}
+                    style={{ border: 'none', background: 'var(--surface)', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer', fontSize: '20px' }}
+                  >
+                    &times;
+                  </button>
+               </div>
+               
+               <div style={{ flex: 1, overflowY: 'auto' }} className="hide-scrollbar">
+                 {cart.length === 0 ? (
+                   <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-secondary)' }}>
+                     <ShoppingBag size={64} style={{ opacity: 0.1, marginBottom: '20px' }} />
+                     <p style={{ fontSize: '18px', fontWeight: '500' }}>Bag is empty</p>
+                   </div>
+                 ) : (
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      {cart.map((c, i) => (
+                        <div key={i} className="animate-fade-in" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderRadius: '16px', background: 'white', border: '1px solid var(--border)' }}>
+                          <div style={{ flex: 1 }}>
+                            <span style={{ fontWeight: '700', display: 'block', fontSize: '15px' }}>{c.name}</span>
+                            <span style={{ color: 'var(--primary)', fontWeight: '800', fontSize: '15px' }}>₹{c.price.toFixed(2)}</span>
+                          </div>
+                          <button 
+                            onClick={() => setCart(cart.filter((_, idx) => idx !== i))}
+                            style={{ border: 'none', background: '#FEE2E2', color: '#DC2626', width: '32px', height: '32px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      ))}
+                   </div>
+                 )}
+               </div>
+
+               {cart.length > 0 && (
+                 <div style={{ marginTop: '24px', borderTop: '1px solid var(--border)', paddingTop: '24px' }}>
+                    <div style={{ background: 'white', padding: '24px', borderRadius: '24px', marginBottom: '24px', border: '1px solid var(--border)' }}>
+                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+                         <span>Subtotal</span>
+                         <span style={{ color: 'var(--text-main)', fontWeight: '600' }}>₹{subtotal.toFixed(2)}</span>
+                       </div>
+                       <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '900', fontSize: '24px' }}>
+                         <span>Total</span>
+                         <span style={{ color: 'var(--primary)' }}>₹{finalTotal.toFixed(2)}</span>
+                       </div>
+                    </div>
+                    <button 
+                      className="btn btn-primary" 
+                      style={{ width: '100%', padding: '20px', fontSize: '18px', borderRadius: '20px' }} 
+                      onClick={() => { setIsCartOpen(false); setCheckoutStep(1); }}
+                    >
+                      Checkout Now
+                    </button>
+                 </div>
+               )}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
