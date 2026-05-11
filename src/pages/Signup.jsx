@@ -34,6 +34,8 @@ export default function Signup() {
         createdAt: new Date().toISOString()
       });
 
+      // Small delay to ensure Firestore propagation before navigation
+      await new Promise(resolve => setTimeout(resolve, 500));
       navigate('/');
     } catch (err) {
       console.error(err);

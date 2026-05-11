@@ -10,7 +10,8 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
     function hasRole(role) {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
     }
 
     // Orders: Anyone can read if they are part of it. Admin can read all.
@@ -31,16 +32,16 @@ service cloud.firestore {
       allow write: if isSignedIn() && (isOwner(resource.data.userId) || hasRole('SUPER_ADMIN'));
     }
 
-    // Menu Items: Publicly readable. Editable by Merchant and Super Admin.
+    // Menu Items: Publicly readable. Editable by Merchant.
     match /menu_items/{itemId} {
       allow read: if true;
-      allow write: if isSignedIn() && (isOwner(resource.data.merchantId) || hasRole('SUPER_ADMIN'));
+      allow write: if isSignedIn() && (isOwner(request.resource.data.merchantId) || isOwner(resource.data.merchantId) || hasRole('SUPER_ADMIN'));
     }
 
     // Categories: Publicly readable. Editable by Merchant.
     match /merchant_categories/{catId} {
       allow read: if true;
-      allow write: if isSignedIn() && (isOwner(resource.data.merchantId) || hasRole('SUPER_ADMIN'));
+      allow write: if isSignedIn() && (isOwner(request.resource.data.merchantId) || isOwner(resource.data.merchantId) || hasRole('SUPER_ADMIN'));
     }
 
     // System Banners: Publicly readable. Only Super Admin can write.

@@ -14,11 +14,18 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         // Fetch user profile from Firestore
-        const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+        let userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+        
+        // If not found, wait 2 seconds and try again (handles signup race condition)
+        if (!userDoc.exists()) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+        }
+
         if (userDoc.exists()) {
            setUser({ id: firebaseUser.uid, ...userDoc.data() });
         } else {
-           console.error("User document not found in Firestore!");
+           console.error("User document not found in Firestore after retry!");
            setUser(null);
         }
       } else {

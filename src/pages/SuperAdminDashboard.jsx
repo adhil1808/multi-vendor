@@ -474,6 +474,9 @@ export default function SuperAdminDashboard() {
                     <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => openMenuEditor(m)}>
                       Menu
                     </button>
+                    <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => openEditDetails(m)}>
+                      Edit
+                    </button>
                     <button className="btn btn-outline hover-scale" style={{ padding: '6px 12px', color: 'red', borderColor: 'red' }} onClick={() => handleDeleteMerchant(m.userId)}>
                       <Trash2 size={16} /> Delete
                     </button>
@@ -564,7 +567,7 @@ export default function SuperAdminDashboard() {
               <select value={newOfferMerchantId} onChange={e => setNewOfferMerchantId(e.target.value)} style={{ flex: '1 1 200px' }} required>
                  <option value="ALL">All Restaurants (Global)</option>
                  <optgroup label="Specific Merchants">
-                    {merchants.map(m => <option key={m.id} value={m.id}>{m.restaurantName}</option>)}
+                    {merchants.map(m => <option key={m.id} value={m.userId}>{m.restaurantName}</option>)}
                  </optgroup>
               </select>
               <select value={newOfferType} onChange={e => setNewOfferType(e.target.value)} style={{ width: '130px' }}>
@@ -811,6 +814,31 @@ export default function SuperAdminDashboard() {
                  </div>
                )}
             </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Edit Details Modal */}
+      {editingMerchantDetails && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }} onClick={() => setEditingMerchantDetails(null)}>
+          <div className="card animate-scale-in" style={{ maxWidth: '400px', width: '90%' }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ marginBottom: '16px' }}>Edit Details: {editingMerchantDetails.restaurantName}</h3>
+            <form onSubmit={handleUpdateMerchantDetails} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', fontWeight: 'bold' }}>Restaurant Tags (comma separated)</label>
+                <input 
+                  placeholder="e.g. North Indian, Fast Food, Pure Veg" 
+                  value={tagsInput} 
+                  onChange={e => setTagsInput(e.target.value)} 
+                />
+                <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>Example: Pizza, Burger, Italian</p>
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Save Changes</button>
+                <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setEditingMerchantDetails(null)}>Cancel</button>
+              </div>
+            </form>
           </div>
         </div>,
         document.body
