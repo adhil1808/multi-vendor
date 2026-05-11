@@ -127,7 +127,9 @@ export default function CustomerProfile() {
                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                      <div>
                        <h3 style={{ fontSize: '18px', fontWeight: '800' }}>{merchant.restaurantName}</h3>
-                       <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{order.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A'}</span>
+                       <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                         {order.createdAt?.toMillis ? new Date(order.createdAt.toMillis()).toLocaleString() : (order.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A')}
+                       </span>
                      </div>
                      <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold', padding: '6px 12px', borderRadius: '16px', background: order.status === 'PENDING' ? '#FEF3C7' : order.status === 'DELIVERED' || order.status === 'COMPLETED' ? '#D1FAE5' : '#DBEAFE', color: order.status === 'PENDING' ? '#92400E' : order.status === 'DELIVERED' || order.status === 'COMPLETED' ? '#065F46' : '#1E40AF' }}>
                        {order.status}

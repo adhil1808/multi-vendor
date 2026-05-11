@@ -278,14 +278,29 @@ export default function CustomerApp() {
                </div>
              ) : (
                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                 <div style={{ maxHeight: '300px', overflowY: 'auto', paddingRight: '8px' }} className="hide-scrollbar">
-                   {cart.map((c, i) => (
-                     <div key={i} className="animate-fade-in" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', paddingBottom: '12px', borderBottom: '1px dashed var(--border)', marginBottom: '12px' }}>
-                       <span style={{ fontWeight: '500' }}>1x {c.name}</span>
-                       <span style={{ fontWeight: '600' }}>₹{c.price.toFixed(2)}</span>
-                     </div>
-                   ))}
-                 </div>
+                  <div style={{ maxHeight: '350px', overflowY: 'auto', paddingRight: '8px' }} className="hide-scrollbar">
+                    {cart.map((c, i) => (
+                      <div key={i} className="animate-fade-in" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', border: '1px solid var(--border)', borderRadius: '12px', marginBottom: '10px', background: 'white', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                        <div>
+                          <span style={{ fontWeight: '700', display: 'block', fontSize: '14px' }}>{c.name}</span>
+                          <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '14px' }}>₹{c.price.toFixed(2)}</span>
+                        </div>
+                        <button 
+                          onClick={() => setCart(cart.filter((_, idx) => idx !== i))}
+                          style={{ border: 'none', background: '#FEE2E2', color: '#DC2626', width: '28px', height: '28px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <button 
+                    onClick={() => setCart([])}
+                    style={{ border: 'none', background: 'none', color: 'var(--text-secondary)', fontSize: '12px', alignSelf: 'flex-end', cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    Clear Cart
+                  </button>
 
                  <div style={{ background: 'var(--surface)', padding: '16px', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-secondary)' }}>
@@ -397,6 +412,23 @@ export default function CustomerApp() {
           </div>
         )})}
       </div>
+
+      {/* Floating Bottom Cart Bar (Mobile/Scrolled View) */}
+      {cart.length > 0 && checkoutStep === 0 && (
+        <div 
+          className="animate-slide-up"
+          style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: 'var(--text-main)', color: 'white', padding: '12px 24px', borderRadius: 'var(--radius-full)', display: 'flex', alignItems: 'center', gap: '32px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)', zIndex: 100, cursor: 'pointer' }}
+          onClick={() => setCheckoutStep(1)}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '12px', opacity: 0.8, fontWeight: '500' }}>{cart.length} {cart.length === 1 ? 'item' : 'items'} added</span>
+            <span style={{ fontSize: '18px', fontWeight: '800' }}>₹{finalTotal.toFixed(2)}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', fontSize: '15px' }}>
+            View Cart <ChevronRight size={18} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

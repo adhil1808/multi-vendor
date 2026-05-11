@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { firebaseDBService } from '../services/firebaseDB';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../AuthContext';
 import { Truck, Check, Package } from 'lucide-react';
 
@@ -116,17 +117,24 @@ export default function DeliveryDashboard() {
         </div>
       </div>
 
-      {/* QR Code Modal */}
-      {selectedQR && (
+      {/* QR Code Modal - Using Portal to ensure centering outside grid */}
+      {selectedQR && createPortal(
         <div 
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}
           onClick={() => setSelectedQR(null)}
         >
           <div 
             className="card animate-scale-in" 
-            style={{ maxWidth: '350px', width: '90%', textAlign: 'center', padding: '32px' }}
+            style={{ maxWidth: '350px', width: '90%', textAlign: 'center', padding: '32px', position: 'relative' }}
             onClick={e => e.stopPropagation()}
           >
+            <button 
+              onClick={() => setSelectedQR(null)}
+              style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: 'none', fontSize: '24px', cursor: 'pointer', color: 'var(--text-secondary)' }}
+            >
+              &times;
+            </button>
+            
             <h3 style={{ marginBottom: '8px' }}>Scan to Pay</h3>
             <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
               Amount: <span style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>₹{selectedQR.totalAmount.toFixed(2)}</span>
@@ -150,7 +158,8 @@ export default function DeliveryDashboard() {
               Close
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
