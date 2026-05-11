@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { mockDB, dbService } from '../mockDB';
-import { Plus, Trash2, TrendingUp, DollarSign, ShoppingBag, Activity, Tag, Image as ImageIcon, MapPin } from 'lucide-react';
+import { Plus, Trash2, TrendingUp, DollarSign, ShoppingBag, Activity, Tag, Image as ImageIcon, MapPin, Store } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 
@@ -430,59 +430,71 @@ export default function SuperAdminDashboard() {
 
       {/* Add Merchant Modal */}
       {showMerchantModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', zIndex: 1000, overflowY: 'auto', padding: '5vh 16px' }} onClick={() => setShowMerchantModal(false)}>
-          <div className="card animate-scale-in" style={{ width: '100%', maxWidth: '750px', backgroundColor: 'white', margin: 'auto' }} onClick={e => e.stopPropagation()}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', zIndex: 1000, overflowY: 'auto', padding: '5vh 16px' }} onClick={() => setShowMerchantModal(false)}>
+          <div className="card animate-fade-in-up" style={{ width: '100%', maxWidth: '800px', backgroundColor: 'var(--surface)', padding: '32px', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-lg)' }} onClick={e => e.stopPropagation()}>
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '16px', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: 'bold' }}>Onboard New Merchant</h2>
-              <button onClick={() => setShowMerchantModal(false)} style={{ background: '#f3f4f6', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '18px', fontWeight: 'bold', color: '#111827' }}>&times;</button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ background: 'var(--primary-light)', color: 'var(--primary)', padding: '12px', borderRadius: '12px' }}>
+                  <Store size={24} />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0 }}>Onboard New Merchant</h2>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>Fill in the details to register a new restaurant partner.</p>
+                </div>
+              </div>
+              <button onClick={() => setShowMerchantModal(false)} style={{ background: '#f3f4f6', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '20px', color: 'var(--text-secondary)', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = '#e5e7eb'} onMouseOut={e => e.currentTarget.style.background = '#f3f4f6'}>&times;</button>
             </div>
 
-            <form onSubmit={handleAddMerchant} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleAddMerchant} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               
-              <div className="layout-dual-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>Restaurant Name *</label>
-                  <input placeholder="E.g., Pizza Palace" value={newMerchantName} onChange={e => setNewMerchantName(e.target.value)} required style={{ width: '100%' }} />
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>Restaurant Name *</label>
+                  <input placeholder="E.g., Pizza Palace" value={newMerchantName} onChange={e => setNewMerchantName(e.target.value)} required style={{ width: '100%', padding: '14px 16px' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>Login Email *</label>
-                  <input type="email" placeholder="merchant@domain.com" value={newMerchantEmail} onChange={e => setNewMerchantEmail(e.target.value)} required style={{ width: '100%' }} />
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>Login Email *</label>
+                  <input type="email" placeholder="merchant@domain.com" value={newMerchantEmail} onChange={e => setNewMerchantEmail(e.target.value)} required style={{ width: '100%', padding: '14px 16px' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>Initial Password *</label>
-                  <input type="password" placeholder="Secure password" value={newMerchantPassword} onChange={e => setNewMerchantPassword(e.target.value)} required style={{ width: '100%' }} />
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>Initial Password *</label>
+                  <input type="password" placeholder="Secure password" value={newMerchantPassword} onChange={e => setNewMerchantPassword(e.target.value)} required style={{ width: '100%', padding: '14px 16px' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>Contact Number *</label>
-                  <input type="tel" placeholder="+123 456 7890" value={newMerchantPhone} onChange={e => setNewMerchantPhone(e.target.value)} required style={{ width: '100%' }} />
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>Contact Number *</label>
+                  <input type="tel" placeholder="+123 456 7890" value={newMerchantPhone} onChange={e => setNewMerchantPhone(e.target.value)} required style={{ width: '100%', padding: '14px 16px' }} />
                 </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>FSSAI Registration *</label>
-                  <input placeholder="12345678901234" value={newMerchantFssai} onChange={e => setNewMerchantFssai(e.target.value)} required style={{ width: '100%' }} />
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>FSSAI Registration *</label>
+                  <input placeholder="12345678901234" value={newMerchantFssai} onChange={e => setNewMerchantFssai(e.target.value)} required style={{ width: '100%', padding: '14px 16px' }} />
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>Shop Details & Description</label>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>Shop Details & Description</label>
                 <textarea 
-                  placeholder="Provide brief details about the restaurant, cuisine, or specialty." 
+                  placeholder="Provide brief details about the restaurant, cuisine, or specialty..." 
                   value={newMerchantDetails} 
                   onChange={e => setNewMerchantDetails(e.target.value)} 
                   rows={3}
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', outline: 'none', fontFamily: 'inherit', resize: 'vertical' }} 
+                  style={{ width: '100%', padding: '14px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', outline: 'none', fontFamily: 'inherit', resize: 'vertical', backgroundColor: '#FAFAFA' }} 
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', fontSize: '13px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
-                  <MapPin size={16} /> Pin Exact Location on Map
-                </label>
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>Click on the map to drop a pin and capture GPS coordinates.</p>
-                <div style={{ border: '2px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
+              <div style={{ background: '#FAFAFA', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>
+                    <MapPin size={18} color="var(--primary)" /> Pin Exact Location on Map
+                  </label>
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', background: 'white', padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--border)' }}>
+                    Lat: {newMerchantLocation.lat.toFixed(4)}, Lng: {newMerchantLocation.lng.toFixed(4)}
+                  </span>
+                </div>
+                <div style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
                   {isLoaded ? (
                     <GoogleMap
-                      mapContainerStyle={mapContainerStyle}
+                      mapContainerStyle={{ width: '100%', height: '250px' }}
                       center={newMerchantLocation}
                       zoom={14}
                       onClick={onMapClick}
@@ -490,16 +502,13 @@ export default function SuperAdminDashboard() {
                     >
                       <Marker position={newMerchantLocation} />
                     </GoogleMap>
-                  ) : <div style={{ height: '250px', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>Loading Google Maps...</div>}
-                </div>
-                <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'right' }}>
-                  Coordinates: {newMerchantLocation.lat.toFixed(4)}, {newMerchantLocation.lng.toFixed(4)}
+                  ) : <div style={{ height: '250px', background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>Loading Map...</div>}
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
-                <button type="button" className="btn btn-outline" onClick={() => setShowMerchantModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" style={{ paddingLeft: '24px', paddingRight: '24px' }}>Onboard Merchant</button>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '8px' }}>
+                <button type="button" className="btn btn-outline" style={{ padding: '12px 24px', borderRadius: 'var(--radius-md)' }} onClick={() => setShowMerchantModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ padding: '12px 32px', borderRadius: 'var(--radius-md)', fontSize: '16px' }}>Complete Onboarding</button>
               </div>
             </form>
           </div>
