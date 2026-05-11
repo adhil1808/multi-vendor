@@ -1,0 +1,18 @@
+import { db } from '../src/firebase.js';
+import { doc, getDoc } from 'firebase/firestore';
+
+async function checkUser() {
+  try {
+    const uid = "xhAoFkl6A7Z5NHO2TgbuEVcFMeG2";
+    const docSnap = await getDoc(doc(db, "users", uid));
+    if (docSnap.exists()) {
+      console.log("USER_DATA:", JSON.stringify(docSnap.data()));
+    } else {
+      console.log("USER_NOT_FOUND");
+    }
+  } catch (err) {
+    console.error("Error:", err);
+  }
+}
+
+checkUser();
