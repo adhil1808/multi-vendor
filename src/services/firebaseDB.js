@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, setDoc, getDoc } from "firebase/firestore";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { db, secondaryAuth } from "../firebase";
 
@@ -36,12 +36,28 @@ export const firebaseDBService = {
   },
   placeOrder: async (orderData) => {
     try {
-      const docRef = await addDoc(collection(db, "orders"), {
+      let orderId;
+      let isUnique = false;
+      let attempts = 0;
+      
+      // Generate a unique 5-digit order ID
+      while(!isUnique && attempts < 10) {
+        orderId = Math.floor(10000 + Math.random() * 90000).toString();
+        const docRef = doc(db, "orders", orderId);
+        const docSnap = await getDoc(docRef);
+        if(!docSnap.exists()) {
+          isUnique = true;
+        }
+        attempts++;
+      }
+
+      await setDoc(doc(db, "orders", orderId), {
         ...orderData,
         status: 'PENDING',
         createdAt: serverTimestamp()
       });
-      return { id: docRef.id, ...orderData, status: 'PENDING' };
+      
+      return { id: orderId, ...orderData, status: 'PENDING' };
     } catch (error) {
       console.error("Error placing order:", error);
       throw error;

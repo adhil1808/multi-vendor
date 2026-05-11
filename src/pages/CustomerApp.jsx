@@ -265,63 +265,75 @@ export default function CustomerApp() {
             </div>
           </div>
 
-          {/* Premium Cart Sidebar */}
-          <div className="glass-panel animate-fade-in-up" style={{ alignSelf: 'start', position: 'sticky', top: '90px', padding: '24px' }}>
-             <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '20px', fontWeight: '700', marginBottom: '24px' }}>
-               <ShoppingBag size={24} color="var(--primary)" /> Your Order
-             </h3>
+          {/* Beautiful Cart Sidebar */}
+          <div className="glass-panel animate-fade-in-up" style={{ alignSelf: 'start', position: 'sticky', top: '90px', padding: '28px', border: '1px solid rgba(255, 122, 40, 0.1)', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.05)' }}>
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '22px', fontWeight: '800' }}>
+                  <ShoppingBag size={24} color="var(--primary)" /> Your Order
+                </h3>
+                {cart.length > 0 && (
+                  <button 
+                    onClick={() => setCart([])}
+                    style={{ border: 'none', background: 'none', color: '#EF4444', fontSize: '13px', fontWeight: '600', cursor: 'pointer', opacity: 0.8 }}
+                  >
+                    Clear
+                  </button>
+                )}
+             </div>
              
              {cart.length === 0 ? (
-               <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-secondary)' }}>
-                 <ShoppingBag size={48} style={{ opacity: 0.2, margin: '0 auto 16px auto' }} />
-                 <p style={{ fontSize: '15px' }}>Your cart is empty.</p>
+               <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-secondary)' }}>
+                 <div style={{ background: 'var(--surface)', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                    <ShoppingBag size={32} style={{ opacity: 0.3 }} />
+                 </div>
+                 <p style={{ fontSize: '16px', fontWeight: '500' }}>Your bag is empty.</p>
+                 <p style={{ fontSize: '13px', marginTop: '4px' }}>Add some delicious items to start!</p>
                </div>
              ) : (
-               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ maxHeight: '350px', overflowY: 'auto', paddingRight: '8px' }} className="hide-scrollbar">
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div style={{ maxHeight: '380px', overflowY: 'auto', paddingRight: '4px' }} className="hide-scrollbar">
                     {cart.map((c, i) => (
-                      <div key={i} className="animate-fade-in" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', border: '1px solid var(--border)', borderRadius: '12px', marginBottom: '10px', background: 'white', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                        <div>
-                          <span style={{ fontWeight: '700', display: 'block', fontSize: '14px' }}>{c.name}</span>
-                          <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '14px' }}>₹{c.price.toFixed(2)}</span>
+                      <div key={i} className="animate-fade-in" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px', borderRadius: '16px', marginBottom: '12px', background: 'white', border: '1px solid var(--border)', transition: 'all 0.2s' }}>
+                        <div style={{ flex: 1 }}>
+                          <span style={{ fontWeight: '700', display: 'block', fontSize: '15px', marginBottom: '2px' }}>{c.name}</span>
+                          <span style={{ color: 'var(--primary)', fontWeight: '800', fontSize: '15px' }}>₹{c.price.toFixed(2)}</span>
                         </div>
                         <button 
                           onClick={() => setCart(cart.filter((_, idx) => idx !== i))}
-                          style={{ border: 'none', background: '#FEE2E2', color: '#DC2626', width: '28px', height: '28px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          style={{ border: 'none', background: '#FEE2E2', color: '#DC2626', width: '30px', height: '30px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                          onMouseEnter={e => e.currentTarget.style.background = '#FECACA'}
+                          onMouseLeave={e => e.currentTarget.style.background = '#FEE2E2'}
                         >
-                          &times;
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     ))}
                   </div>
-                  
-                  <button 
-                    onClick={() => setCart([])}
-                    style={{ border: 'none', background: 'none', color: 'var(--text-secondary)', fontSize: '12px', alignSelf: 'flex-end', cursor: 'pointer', textDecoration: 'underline' }}
-                  >
-                    Clear Cart
-                  </button>
 
-                 <div style={{ background: 'var(--surface)', padding: '16px', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                       <span>Item Total</span>
-                       <span style={{ color: 'var(--text-main)', fontWeight: '500' }}>₹{subtotal.toFixed(2)}</span>
+                 <div style={{ background: '#F9FAFB', padding: '20px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--border)' }}>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', color: 'var(--text-secondary)' }}>
+                       <span>Subtotal</span>
+                       <span style={{ color: 'var(--text-main)', fontWeight: '600' }}>₹{subtotal.toFixed(2)}</span>
                      </div>
                      {activeOffer && discountAmount > 0 && (
-                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#10B981', fontWeight: '700' }}>
-                       <span>Discount ({activeOffer.code})</span>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', color: '#10B981', fontWeight: '700' }}>
+                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Tag size={14}/> Promo ({activeOffer.code})</span>
                        <span>-₹{discountAmount.toFixed(2)}</span>
                      </div>
                      )}
-                     <div style={{ borderTop: '1px solid var(--border)', margin: '4px 0' }} />
-                     <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '800', fontSize: '20px' }}>
+                     <div style={{ borderTop: '1px dashed #D1D5DB', margin: '6px 0' }} />
+                     <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '900', fontSize: '22px', color: 'var(--text-main)' }}>
                        <span>Total</span>
                        <span style={{ color: 'var(--primary)' }}>₹{(subtotal - discountAmount).toFixed(2)}</span>
                      </div>
                  </div>
 
-                 <button className="btn btn-primary" style={{ width: '100%', marginTop: '8px', padding: '16px', fontSize: '16px' }} onClick={() => setCheckoutStep(1)}>
-                    Proceed to Checkout
+                 <button 
+                    className="btn btn-primary hover-scale" 
+                    style={{ width: '100%', marginTop: '10px', padding: '18px', fontSize: '17px', fontWeight: '800', borderRadius: '18px', boxShadow: '0 10px 20px -5px rgba(255, 122, 40, 0.4)' }} 
+                    onClick={() => setCheckoutStep(1)}
+                 >
+                    Checkout Now
                  </button>
                </div>
              )}
@@ -412,23 +424,6 @@ export default function CustomerApp() {
           </div>
         )})}
       </div>
-
-      {/* Floating Bottom Cart Bar (Mobile/Scrolled View) */}
-      {cart.length > 0 && checkoutStep === 0 && (
-        <div 
-          className="animate-slide-up"
-          style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: 'var(--text-main)', color: 'white', padding: '12px 24px', borderRadius: 'var(--radius-full)', display: 'flex', alignItems: 'center', gap: '32px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)', zIndex: 100, cursor: 'pointer' }}
-          onClick={() => setCheckoutStep(1)}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '12px', opacity: 0.8, fontWeight: '500' }}>{cart.length} {cart.length === 1 ? 'item' : 'items'} added</span>
-            <span style={{ fontSize: '18px', fontWeight: '800' }}>₹{finalTotal.toFixed(2)}</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', fontSize: '15px' }}>
-            View Cart <ChevronRight size={18} />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
