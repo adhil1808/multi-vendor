@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { mockDB, dbService } from '../mockDB';
 import { Plus, Trash2, TrendingUp, DollarSign, ShoppingBag, Activity, Tag, Image as ImageIcon, MapPin, Store } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker, Autocomplete } from '@react-google-maps/api';
+
+const libraries = ['places'];
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
 
 const mapContainerStyle = {
   width: '100%',
@@ -51,8 +55,27 @@ export default function SuperAdminDashboard() {
   // Google Maps API
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: "" // intentionally left blank for prototype dev watermark
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: libraries
   });
+
+  const [autocomplete, setAutocomplete] = useState(null);
+
+  const onLoad = (autoC) => setAutocomplete(autoC);
+
+  const onPlaceChanged = () => {
+    if (autocomplete !== null) {
+      const place = autocomplete.getPlace();
+      if (place.geometry && place.geometry.location) {
+        setNewMerchantLocation({
+          lat: place.geometry.location.lat(),
+          lng: place.geometry.location.lng()
+        });
+      }
+    } else {
+      console.log('Autocomplete is not loaded yet!');
+    }
+  };
 
   useEffect(() => {
     setMerchants(mockDB.users.filter(u => u.role === 'MERCHANT'));
@@ -197,6 +220,7 @@ export default function SuperAdminDashboard() {
   }, []);
 
   return (
+    <>
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ fontSize: '24px', fontWeight: 'bold' }}>Super Admin Dashboard</h2>
@@ -428,12 +452,14 @@ export default function SuperAdminDashboard() {
       </div>
       )}
 
+    </div>
+
       {/* Add Merchant Modal */}
-      {showMerchantModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', zIndex: 1000, overflowY: 'auto', padding: '5vh 16px' }} onClick={() => setShowMerchantModal(false)}>
-          <div className="card animate-fade-in-up" style={{ width: '100%', maxWidth: '800px', backgroundColor: 'var(--surface)', padding: '32px', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-lg)' }} onClick={e => e.stopPropagation()}>
+      {showMerchantModal && createPortal(
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px', boxSizing: 'border-box' }} onClick={() => setShowMerchantModal(false)}>
+          <div className="card animate-fade-in-up" style={{ width: '100%', maxWidth: '800px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--surface)', padding: 0, borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-lg)', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+            <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, backgroundColor: 'var(--surface)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ background: 'var(--primary-light)', color: 'var(--primary)', padding: '12px', borderRadius: '12px' }}>
                   <Store size={24} />
@@ -446,75 +472,109 @@ export default function SuperAdminDashboard() {
               <button onClick={() => setShowMerchantModal(false)} style={{ background: '#f3f4f6', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '20px', color: 'var(--text-secondary)', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = '#e5e7eb'} onMouseOut={e => e.currentTarget.style.background = '#f3f4f6'}>&times;</button>
             </div>
 
-            <form onSubmit={handleAddMerchant} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>Restaurant Name *</label>
-                  <input placeholder="E.g., Pizza Palace" value={newMerchantName} onChange={e => setNewMerchantName(e.target.value)} required style={{ width: '100%', padding: '14px 16px' }} />
+            <div className="hide-scrollbar" style={{ padding: '32px', overflowY: 'auto', flex: 1 }}>
+              <form onSubmit={handleAddMerchant} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>Restaurant Name *</label>
+                    <input placeholder="E.g., Pizza Palace" value={newMerchantName} onChange={e => setNewMerchantName(e.target.value)} required style={{ width: '100%', padding: '14px 16px' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>Login Email *</label>
+                    <input type="email" placeholder="merchant@domain.com" value={newMerchantEmail} onChange={e => setNewMerchantEmail(e.target.value)} required style={{ width: '100%', padding: '14px 16px' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>Initial Password *</label>
+                    <input type="password" placeholder="Secure password" value={newMerchantPassword} onChange={e => setNewMerchantPassword(e.target.value)} required style={{ width: '100%', padding: '14px 16px' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>Contact Number *</label>
+                    <input type="tel" placeholder="+123 456 7890" value={newMerchantPhone} onChange={e => setNewMerchantPhone(e.target.value)} required style={{ width: '100%', padding: '14px 16px' }} />
+                  </div>
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>FSSAI Registration *</label>
+                    <input placeholder="12345678901234" value={newMerchantFssai} onChange={e => setNewMerchantFssai(e.target.value)} required style={{ width: '100%', padding: '14px 16px' }} />
+                  </div>
                 </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>Login Email *</label>
-                  <input type="email" placeholder="merchant@domain.com" value={newMerchantEmail} onChange={e => setNewMerchantEmail(e.target.value)} required style={{ width: '100%', padding: '14px 16px' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>Initial Password *</label>
-                  <input type="password" placeholder="Secure password" value={newMerchantPassword} onChange={e => setNewMerchantPassword(e.target.value)} required style={{ width: '100%', padding: '14px 16px' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>Contact Number *</label>
-                  <input type="tel" placeholder="+123 456 7890" value={newMerchantPhone} onChange={e => setNewMerchantPhone(e.target.value)} required style={{ width: '100%', padding: '14px 16px' }} />
-                </div>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>FSSAI Registration *</label>
-                  <input placeholder="12345678901234" value={newMerchantFssai} onChange={e => setNewMerchantFssai(e.target.value)} required style={{ width: '100%', padding: '14px 16px' }} />
-                </div>
-              </div>
 
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>Shop Details & Description</label>
-                <textarea 
-                  placeholder="Provide brief details about the restaurant, cuisine, or specialty..." 
-                  value={newMerchantDetails} 
-                  onChange={e => setNewMerchantDetails(e.target.value)} 
-                  rows={3}
-                  style={{ width: '100%', padding: '14px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', outline: 'none', fontFamily: 'inherit', resize: 'vertical', backgroundColor: '#FAFAFA' }} 
-                />
-              </div>
-
-              <div style={{ background: '#FAFAFA', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>
-                    <MapPin size={18} color="var(--primary)" /> Pin Exact Location on Map
-                  </label>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', background: 'white', padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--border)' }}>
-                    Lat: {newMerchantLocation.lat.toFixed(4)}, Lng: {newMerchantLocation.lng.toFixed(4)}
-                  </span>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>Shop Details & Description</label>
+                  <textarea 
+                    placeholder="Provide brief details about the restaurant, cuisine, or specialty..." 
+                    value={newMerchantDetails} 
+                    onChange={e => setNewMerchantDetails(e.target.value)} 
+                    rows={3}
+                    style={{ width: '100%', padding: '14px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', outline: 'none', fontFamily: 'inherit', resize: 'vertical', backgroundColor: '#FAFAFA' }} 
+                  />
                 </div>
-                <div style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
-                  {isLoaded ? (
-                    <GoogleMap
-                      mapContainerStyle={{ width: '100%', height: '250px' }}
-                      center={newMerchantLocation}
-                      zoom={14}
-                      onClick={onMapClick}
-                      options={{ disableDefaultUI: true, zoomControl: true }}
-                    >
-                      <Marker position={newMerchantLocation} />
-                    </GoogleMap>
-                  ) : <div style={{ height: '250px', background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>Loading Map...</div>}
-                </div>
-              </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '8px' }}>
-                <button type="button" className="btn btn-outline" style={{ padding: '12px 24px', borderRadius: 'var(--radius-md)' }} onClick={() => setShowMerchantModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" style={{ padding: '12px 32px', borderRadius: 'var(--radius-md)', fontSize: '16px' }}>Complete Onboarding</button>
-              </div>
-            </form>
+                <div style={{ background: '#FAFAFA', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>
+                      <MapPin size={18} color="var(--primary)" /> Pin Exact Location on Map
+                    </label>
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', background: 'white', padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--border)' }}>
+                      Lat: {newMerchantLocation.lat.toFixed(4)}, Lng: {newMerchantLocation.lng.toFixed(4)}
+                    </span>
+                  </div>
+                  <div style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)', position: 'relative' }}>
+                    {!GOOGLE_MAPS_API_KEY ? (
+                      <div style={{ height: '250px', background: '#FAFAFA', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', padding: '24px', textAlign: 'center' }}>
+                         <MapPin size={32} style={{ marginBottom: '12px', opacity: 0.5 }} />
+                         <p style={{ margin: 0, fontWeight: 'bold', fontSize: '16px', color: 'var(--text-main)' }}>Google Maps is disabled</p>
+                         <p style={{ margin: '8px 0 0', fontSize: '13px' }}>Please add your Google Maps API Key to a <code>.env</code> file <br/>as <code>VITE_GOOGLE_MAPS_API_KEY</code> to enable Search.</p>
+                      </div>
+                    ) : isLoaded ? (
+                      <GoogleMap
+                        mapContainerStyle={{ width: '100%', height: '250px' }}
+                        center={newMerchantLocation}
+                        zoom={14}
+                        onClick={onMapClick}
+                        options={{ disableDefaultUI: true, zoomControl: true }}
+                      >
+                        <Autocomplete
+                          onLoad={onLoad}
+                          onPlaceChanged={onPlaceChanged}
+                        >
+                          <input
+                            type="text"
+                            placeholder="Search for a restaurant or place..."
+                            style={{
+                              boxSizing: 'border-box',
+                              border: '1px solid transparent',
+                              width: '240px',
+                              height: '40px',
+                              padding: '0 12px',
+                              borderRadius: '8px',
+                              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.3)',
+                              fontSize: '14px',
+                              outline: 'none',
+                              textOverflow: 'ellipses',
+                              position: 'absolute',
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              top: '10px'
+                            }}
+                          />
+                        </Autocomplete>
+                        <Marker position={newMerchantLocation} />
+                      </GoogleMap>
+                    ) : <div style={{ height: '250px', background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>Loading Map...</div>}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '8px' }}>
+                  <button type="button" className="btn btn-outline" style={{ padding: '12px 24px', borderRadius: 'var(--radius-md)' }} onClick={() => setShowMerchantModal(false)}>Cancel</button>
+                  <button type="submit" className="btn btn-primary" style={{ padding: '12px 32px', borderRadius: 'var(--radius-md)', fontSize: '16px' }}>Complete Onboarding</button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-    </div>
+    </>
   );
 }
