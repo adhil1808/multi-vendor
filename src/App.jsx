@@ -45,15 +45,17 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 };
 
 const RoleBasedHome = () => {
-  const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
+  const { user, loading } = useAuth();
+  
+  if (loading) return null; // Wait for auth to resolve
+  if (!user) return <CustomerApp />;
 
   switch (user.role) {
     case 'SUPER_ADMIN': return <Navigate to="/superadmin" replace />;
     case 'MERCHANT': return <Navigate to="/merchant" replace />;
     case 'DELIVERY_BOY': return <Navigate to="/delivery" replace />;
-    case 'CUSTOMER': return <Navigate to="/customer" replace />;
-    default: return <Navigate to="/login" replace />;
+    case 'CUSTOMER': return <CustomerApp />;
+    default: return <CustomerApp />;
   }
 };
 
@@ -86,11 +88,7 @@ function App() {
               </ProtectedRoute>
             } />
 
-            <Route path="/customer" element={
-              <ProtectedRoute allowedRoles={['CUSTOMER']}>
-                <CustomerApp />
-              </ProtectedRoute>
-            } />
+            <Route path="/customer" element={<CustomerApp />} />
 
             <Route path="/customer/profile" element={
               <ProtectedRoute allowedRoles={['CUSTOMER']}>

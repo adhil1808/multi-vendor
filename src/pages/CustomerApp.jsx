@@ -15,7 +15,7 @@ export default function CustomerApp() {
   const [menuItems, setMenuItems] = useState([]);
   const [cart, setCart] = useState([]);
   
-  const [selectedAddress, setSelectedAddress] = useState(user.addresses?.[0] || '');
+  const [selectedAddress, setSelectedAddress] = useState(user?.addresses?.[0] || '');
   const [customAddress, setCustomAddress] = useState('');
 
   const [checkoutStep, setCheckoutStep] = useState(0); // 0: off, 1: review, 2: delivery, 3: payment
@@ -55,6 +55,10 @@ export default function CustomerApp() {
   const finalTotal = subtotal + deliveryFee - discountAmount;
 
   const handlePlaceOrder = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     const finalAddress = selectedAddress === 'custom' ? customAddress : selectedAddress;
     
     const orderData = {
@@ -78,11 +82,10 @@ export default function CustomerApp() {
             <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>Delivering to</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
                 <MapPin size={16} color="var(--primary)" /> 
-                {user.addresses?.[0] || 'Home'} <ChevronRight size={16} />
             </div>
         </div>
-        <button className="btn btn-outline" style={{ padding: '8px 12px', borderRadius: '12px' }} onClick={() => navigate('/customer/profile')}>
-            <Settings size={18} /> <span className="mobile-hide">Profile</span>
+        <button className="btn btn-outline" style={{ padding: '8px 12px', borderRadius: '12px' }} onClick={() => navigate(user ? '/customer/profile' : '/login')}>
+            <Settings size={18} /> <span className="mobile-hide">{user ? 'Profile' : 'Login'}</span>
         </button>
     </div>
   );
@@ -154,7 +157,7 @@ export default function CustomerApp() {
                 <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '8px' }}>Where to deliver?</h2>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '20px' }}>Select an existing address or enter a new one.</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-                   {user.addresses?.map((addr, idx) => (
+                   {user?.addresses?.map((addr, idx) => (
                      <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', border: `2px solid ${selectedAddress === addr ? 'var(--primary)' : 'var(--border)'}`, borderRadius: '12px', cursor: 'pointer', background: selectedAddress === addr ? 'var(--primary-light)' : 'var(--surface)' }}>
                        <input type="radio" name="address" checked={selectedAddress === addr} onChange={() => setSelectedAddress(addr)} style={{ width: 'auto' }} />
                        <span style={{ fontWeight: '500' }}>{addr}</span>
