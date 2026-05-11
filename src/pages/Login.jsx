@@ -49,15 +49,6 @@ export default function Login() {
           </button>
         </form>
 
-        <div style={{ marginTop: '32px', textAlign: 'left', fontSize: '13px', color: 'var(--text-secondary)' }}>
-          <p style={{ marginBottom: '8px', fontWeight: 'bold' }}>Demo Accounts (pass: password)</p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            <button className="btn btn-outline" style={{ fontSize: '12px', padding: '4px 8px' }} onClick={() => autofill('admin@app.com')}>Super Admin</button>
-            <button className="btn btn-outline" style={{ fontSize: '12px', padding: '4px 8px' }} onClick={() => autofill('pizza@app.com')}>Merchant</button>
-            <button className="btn btn-outline" style={{ fontSize: '12px', padding: '4px 8px' }} onClick={() => autofill('bob@app.com')}>Delivery Boy</button>
-            <button className="btn btn-outline" style={{ fontSize: '12px', padding: '4px 8px' }} onClick={() => autofill('customer@app.com')}>Customer</button>
-          </div>
-        </div>
       </div>
     </div>
   );
