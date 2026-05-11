@@ -41,6 +41,10 @@ export default function SuperAdminDashboard() {
   const [newOfferType, setNewOfferType] = useState('PERCENTAGE');
   const [newOfferAmount, setNewOfferAmount] = useState('');
   const [newOfferCode, setNewOfferCode] = useState('');
+  
+  // UPI Edit state
+  const [editingMerchantUpi, setEditingMerchantUpi] = useState(null); // { userId, restaurantName, upiId }
+  const [upiEditValue, setUpiEditValue] = useState('');
 
   // Delivery creation states
   const [newDeliveryName, setNewDeliveryName] = useState('');
@@ -79,7 +83,7 @@ export default function SuperAdminDashboard() {
   };
 
   useEffect(() => {
-    firebaseDBService.getUsersByRole('MERCHANT').then(setMerchants);
+    firebaseDBService.getAllMerchants().then(setMerchants);
     firebaseDBService.getUsersByRole('DELIVERY_BOY').then(setDelivery);
     firebaseDBService.getBanners().then(setGlobalBanners);
     firebaseDBService.getOffers().then(setMerchantOffers);
@@ -144,7 +148,7 @@ export default function SuperAdminDashboard() {
 
     try {
       const res = await firebaseDBService.addMerchantUser(userData, merchantData);
-      setMerchants([...merchants, res.user]);
+      setMerchants([...merchants, res.merchant]);
       
       // Reset Form
       setNewMerchantName('');
@@ -163,9 +167,25 @@ export default function SuperAdminDashboard() {
   const handleDeleteMerchant = async (id) => {
     try {
       await firebaseDBService.deleteUser(id);
-      setMerchants(merchants.filter(m => m.id !== id));
+      setMerchants(merchants.filter(m => m.userId !== id));
     } catch(err) {
       alert("Error deleting merchant: " + err.message);
+    }
+  };
+
+  const handleUpdateMerchantUpi = async (e) => {
+    e.preventDefault();
+    try {
+      const q = query(collection(db, "merchants"), where("userId", "==", editingMerchantUpi.userId));
+      const snap = await getDocs(q);
+      if(!snap.empty) {
+        await updateDoc(doc(db, "merchants", snap.docs[0].id), { upiId: upiEditValue });
+        setMerchants(merchants.map(m => m.userId === editingMerchantUpi.userId ? { ...m, upiId: upiEditValue } : m));
+        setEditingMerchantUpi(null);
+        alert("UPI ID updated successfully!");
+      }
+    } catch (err) {
+      alert("Error updating UPI ID: " + err.message);
     }
   };
 
@@ -358,7 +378,8 @@ export default function SuperAdminDashboard() {
           <thead>
             <tr style={{ background: 'var(--bg-color)' }}>
               <th style={{ padding: '12px 8px' }}>Restaurant Name</th>
-              <th style={{ padding: '12px 8px' }}>Email Contact</th>
+              <th style={{ padding: '12px 8px' }}>Restaurant ID</th>
+              <th style={{ padding: '12px 8px' }}>UPI ID</th>
               <th style={{ padding: '12px 8px' }}>Manage</th>
             </tr>
           </thead>
@@ -366,15 +387,30 @@ export default function SuperAdminDashboard() {
             {merchants.map(m => (
               <tr key={m.id} style={{ borderBottom: '1px solid var(--border)' }}>
                 <td style={{ padding: '12px 8px', fontWeight: '500' }}>{m.restaurantName}</td>
-                <td style={{ padding: '12px 8px', color: 'var(--text-secondary)' }}>{m.email}</td>
+                <td style={{ padding: '12px 8px', fontFamily: 'monospace' }}>{m.restaurantId}</td>
                 <td style={{ padding: '12px 8px' }}>
-                  <button className="btn btn-outline hover-scale" style={{ padding: '6px 12px', color: 'red', borderColor: 'red' }} onClick={() => handleDeleteMerchant(m.id)}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{m.upiId || 'Not Set'}</span>
+                    <button 
+                      className="btn btn-outline" 
+                      style={{ padding: '2px 8px', fontSize: '11px' }}
+                      onClick={() => {
+                        setEditingMerchantUpi(m);
+                        setUpiEditValue(m.upiId || '');
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </div>
+                </td>
+                <td style={{ padding: '12px 8px' }}>
+                  <button className="btn btn-outline hover-scale" style={{ padding: '6px 12px', color: 'red', borderColor: 'red' }} onClick={() => handleDeleteMerchant(m.userId)}>
                     <Trash2 size={16} /> Delete
                   </button>
                 </td>
               </tr>
             ))}
-            {merchants.length === 0 && <tr><td colSpan="3" style={{ padding: '16px', textAlign: 'center', color: 'var(--text-secondary)' }}>No merchants found.</td></tr>}
+            {merchants.length === 0 && <tr><td colSpan="4" style={{ padding: '16px', textAlign: 'center', color: 'var(--text-secondary)' }}>No merchants found.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -609,6 +645,28 @@ export default function SuperAdminDashboard() {
                 </div>
               </form>
             </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Edit UPI Modal */}
+      {editingMerchantUpi && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }} onClick={() => setEditingMerchantUpi(null)}>
+          <div className="card animate-scale-in" style={{ maxWidth: '400px', width: '90%' }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ marginBottom: '16px' }}>Update UPI ID for {editingMerchantUpi.restaurantName}</h3>
+            <form onSubmit={handleUpdateMerchantUpi} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <input 
+                placeholder="merchant@upi" 
+                value={upiEditValue} 
+                onChange={e => setUpiEditValue(e.target.value)} 
+                required 
+              />
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Update UPI</button>
+                <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setEditingMerchantUpi(null)}>Cancel</button>
+              </div>
+            </form>
           </div>
         </div>,
         document.body
