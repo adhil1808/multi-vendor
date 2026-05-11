@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { mockDB, dbService } from '../mockDB';
 import { firebaseDBService } from '../services/firebaseDB';
 import { useAuth } from '../AuthContext';
 import { ShoppingBag, ArrowLeft, Settings, Star, Clock, MapPin, Tag, ChevronRight, CheckCircle } from 'lucide-react';
@@ -22,8 +21,8 @@ export default function CustomerApp() {
   const [checkoutStep, setCheckoutStep] = useState(0); // 0: off, 1: review, 2: delivery, 3: payment
 
   useEffect(() => {
-    setMerchants(mockDB.merchants);
-    setOffers(mockDB.offers);
+    firebaseDBService.getAllMerchants().then(setMerchants);
+    firebaseDBService.getOffers().then(setOffers);
     
     firebaseDBService.getBanners().then(banners => {
       setSystemBanners(banners.filter(b => b.isActive));
@@ -32,7 +31,7 @@ export default function CustomerApp() {
 
   const selectMerchant = (m) => {
     setSelectedMerchant(m);
-    setMenuItems(mockDB.menu_items.filter(i => i.merchantId === m.userId));
+    firebaseDBService.getMenuItems(m.userId).then(setMenuItems);
     setCart([]); 
   };
 
@@ -66,7 +65,7 @@ export default function CustomerApp() {
       deliveryAddress: finalAddress
     };
     
-    await dbService.placeOrder(orderData);
+    await firebaseDBService.placeOrder(orderData);
     setCart([]);
     setCheckoutStep(0);
     alert('Order placed successfully! 🚀');

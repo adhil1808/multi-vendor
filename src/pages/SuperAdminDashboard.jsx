@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { mockDB, dbService } from '../mockDB';
+import { firebaseDBService } from '../services/firebaseDB';
 import { firebaseDBService } from '../services/firebaseDB';
 import { Plus, Trash2, TrendingUp, DollarSign, ShoppingBag, Activity, Tag, Image as ImageIcon, MapPin, Store } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -34,6 +34,7 @@ export default function SuperAdminDashboard() {
   const [newMerchantFssai, setNewMerchantFssai] = useState('');
   const [newMerchantDetails, setNewMerchantDetails] = useState('');
   const [newMerchantLocation, setNewMerchantLocation] = useState({ lat: 28.7041, lng: 77.1025 });
+  const [newMerchantUpi, setNewMerchantUpi] = useState('');
 
   // Marketing states
   const [newBannerImg, setNewBannerImg] = useState('');
@@ -79,23 +80,21 @@ export default function SuperAdminDashboard() {
   };
 
   useEffect(() => {
-    setMerchants(mockDB.users.filter(u => u.role === 'MERCHANT'));
-    setDelivery(mockDB.users.filter(u => u.role === 'DELIVERY_BOY'));
+    firebaseDBService.getUsersByRole('MERCHANT').then(setMerchants);
+    firebaseDBService.getUsersByRole('DELIVERY_BOY').then(setDelivery);
+    firebaseDBService.getBanners().then(setGlobalBanners);
+    firebaseDBService.getOffers().then(setMerchantOffers);
     
-    // Fetch banners from Firebase
-    firebaseDBService.getBanners().then(banners => {
-      setGlobalBanners(banners);
-    });
-
-    setMerchantOffers(mockDB.offers);
-    
-    dbService.getAllOrders().then(allOrders => {
-        setOrders(allOrders);
-        calculateAnalytics(allOrders);
+    Promise.all([
+      firebaseDBService.getAllMerchants(),
+      firebaseDBService.getAllOrders()
+    ]).then(([mList, oList]) => {
+      setOrders(oList);
+      calculateAnalytics(oList, mList);
     });
   }, []);
 
-  const calculateAnalytics = (allOrders) => {
+  const calculateAnalytics = (allOrders, allMerchants) => {
       let revenue = 0;
       let mStats = {};
       let datesMap = {};
@@ -103,7 +102,7 @@ export default function SuperAdminDashboard() {
       allOrders.forEach(order => {
           revenue += order.totalAmount;
           const mId = order.merchantId;
-          const merchantObj = mockDB.merchants.find(m => m.userId === mId);
+          const merchantObj = allMerchants.find(m => m.userId === mId);
           const mName = merchantObj ? merchantObj.restaurantName : 'Unknown Merchant';
           
           if(!mStats[mId]) {
@@ -112,7 +111,7 @@ export default function SuperAdminDashboard() {
           mStats[mId].orders += 1;
           mStats[mId].revenue += order.totalAmount;
 
-          const dateOnly = new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          const dateOnly = new Date(order.createdAt?.toMillis ? order.createdAt.toMillis() : Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           datesMap[dateOnly] = (datesMap[dateOnly] || 0) + 1;
       });
 
@@ -127,14 +126,12 @@ export default function SuperAdminDashboard() {
       setChartData(sortedKeys.map(key => ({ date: key, orders: datesMap[key] })));
   };
 
-  const handleAddMerchant = (e) => {
+  const handleAddMerchant = async (e) => {
     e.preventDefault();
     const newRestaurantId = String(Math.floor(100000 + Math.random() * 900000));
-    const newUser = { id: Date.now().toString(), name: newMerchantName, email: newMerchantEmail, role: 'MERCHANT', password: newMerchantPassword || 'password', restaurantName: newMerchantName };
-    mockDB.users.push(newUser);
-    mockDB.merchants.push({ 
-      id: 'm' + newUser.id, 
-      userId: newUser.id, 
+    
+    const userData = { name: newMerchantName, email: newMerchantEmail, role: 'MERCHANT', password: newMerchantPassword || 'password', restaurantName: newMerchantName };
+    const merchantData = { 
       restaurantId: newRestaurantId,
       restaurantName: newMerchantName, 
       address: 'Unknown', 
@@ -142,30 +139,40 @@ export default function SuperAdminDashboard() {
       phone: newMerchantPhone,
       fssai: newMerchantFssai,
       shopDetails: newMerchantDetails,
-      location: newMerchantLocation
-    });
-    setMerchants([...merchants, newUser]);
-    
-    // Reset Form
-    setNewMerchantName('');
-    setNewMerchantEmail('');
-    setNewMerchantPassword('');
-    setNewMerchantPhone('');
-    setNewMerchantFssai('');
-    setNewMerchantDetails('');
-    setShowMerchantModal(false);
+      location: newMerchantLocation,
+      upiId: newMerchantUpi
+    };
+
+    try {
+      const res = await firebaseDBService.addMerchantUser(userData, merchantData);
+      setMerchants([...merchants, res.user]);
+      
+      // Reset Form
+      setNewMerchantName('');
+      setNewMerchantEmail('');
+      setNewMerchantPassword('');
+      setNewMerchantPhone('');
+      setNewMerchantFssai('');
+      setNewMerchantDetails('');
+      setNewMerchantUpi('');
+      setShowMerchantModal(false);
+    } catch(err) {
+      alert("Error adding merchant: " + err.message);
+    }
   };
 
-  const handleDeleteMerchant = (id) => {
-    mockDB.users = mockDB.users.filter(u => u.id !== id);
-    mockDB.merchants = mockDB.merchants.filter(m => m.userId !== id);
-    setMerchants(merchants.filter(m => m.id !== id));
+  const handleDeleteMerchant = async (id) => {
+    try {
+      await firebaseDBService.deleteUser(id);
+      setMerchants(merchants.filter(m => m.id !== id));
+    } catch(err) {
+      alert("Error deleting merchant: " + err.message);
+    }
   };
 
-  const handleAddDelivery = (e) => {
+  const handleAddDelivery = async (e) => {
     e.preventDefault();
-    const newUser = { 
-      id: Date.now().toString(), 
+    const userData = { 
       name: newDeliveryName, 
       email: newDeliveryEmail, 
       phone: newDeliveryPhone, 
@@ -173,17 +180,25 @@ export default function SuperAdminDashboard() {
       role: 'DELIVERY_BOY', 
       password: 'password' 
     };
-    mockDB.users.push(newUser);
-    setDelivery([...delivery, newUser]);
-    setNewDeliveryName('');
-    setNewDeliveryEmail('');
-    setNewDeliveryPhone('');
-    setNewDeliveryVehicle('');
+    try {
+      const added = await firebaseDBService.addDeliveryBoy(userData);
+      setDelivery([...delivery, added]);
+      setNewDeliveryName('');
+      setNewDeliveryEmail('');
+      setNewDeliveryPhone('');
+      setNewDeliveryVehicle('');
+    } catch(err) {
+      alert("Error adding delivery boy: " + err.message);
+    }
   };
 
-  const handleDeleteDelivery = (id) => {
-    mockDB.users = mockDB.users.filter(u => u.id !== id);
-    setDelivery(delivery.filter(d => d.id !== id));
+  const handleDeleteDelivery = async (id) => {
+    try {
+      await firebaseDBService.deleteUser(id);
+      setDelivery(delivery.filter(d => d.id !== id));
+    } catch(err) {
+      alert("Error deleting delivery boy: " + err.message);
+    }
   };
 
   const handleAddBanner = async (e) => {
@@ -207,26 +222,33 @@ export default function SuperAdminDashboard() {
     }
   }
 
-  const handleAddOffer = (e) => {
+  const handleAddOffer = async (e) => {
     e.preventDefault();
     const discountText = newOfferType === 'PERCENTAGE' ? `${newOfferAmount}% OFF` : `₹${newOfferAmount} OFF`;
     const o = { 
-      id: 'off_'+Date.now(), 
       merchantId: newOfferMerchantId, 
       type: newOfferType,
       amount: Number(newOfferAmount),
       discountText: discountText, 
       code: newOfferCode 
     };
-    mockDB.offers.push(o);
-    setMerchantOffers([...merchantOffers, o]);
-    setNewOfferAmount('');
-    setNewOfferCode('');
+    try {
+      const added = await firebaseDBService.addOffer(o);
+      setMerchantOffers([...merchantOffers, added]);
+      setNewOfferAmount('');
+      setNewOfferCode('');
+    } catch(err) {
+      alert("Error adding offer: " + err.message);
+    }
   }
 
-  const handleDeleteOffer = (id) => {
-    mockDB.offers = mockDB.offers.filter(o => o.id !== id);
-    setMerchantOffers(mockDB.offers);
+  const handleDeleteOffer = async (id) => {
+    try {
+      await firebaseDBService.deleteOffer(id);
+      setMerchantOffers(merchantOffers.filter(o => o.id !== id));
+    } catch(err) {
+      alert("Error deleting offer: " + err.message);
+    }
   }
 
   const onMapClick = useCallback((e) => {
@@ -509,6 +531,10 @@ export default function SuperAdminDashboard() {
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>FSSAI Registration *</label>
                     <input placeholder="12345678901234" value={newMerchantFssai} onChange={e => setNewMerchantFssai(e.target.value)} required style={{ width: '100%', padding: '14px 16px' }} />
+                  </div>
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>UPI ID for Payments (e.g., merchant@upi)</label>
+                    <input placeholder="merchant@upi" value={newMerchantUpi} onChange={e => setNewMerchantUpi(e.target.value)} style={{ width: '100%', padding: '14px 16px' }} />
                   </div>
                 </div>
 

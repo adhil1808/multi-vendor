@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { mockDB, dbService } from '../mockDB';
+import { firebaseDBService } from '../services/firebaseDB';
+import { db } from '../firebase';
+import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { useAuth } from '../AuthContext';
 import { Plus, BellRing, CheckCircle, Image as ImageIcon, Power, TrendingUp } from 'lucide-react';
 
@@ -22,56 +24,61 @@ export default function MerchantDashboard() {
   // Form states
   const [newItem, setNewItem] = useState({ name: '', price: '', categoryId: '', imageUrl: '' });
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [isEditingUpi, setIsEditingUpi] = useState(false);
+  const [upiInput, setUpiInput] = useState('');
 
-  const currentMerchant = mockDB.merchants ? mockDB.merchants.find(m => m.userId === user.id) : null;
-  const [merchantOpen, setMerchantOpen] = useState(currentMerchant ? currentMerchant.openStatus !== false : true);
+  const [currentMerchant, setCurrentMerchant] = useState(null);
+  const [merchantOpen, setMerchantOpen] = useState(true);
 
-  const toggleMerchantStatus = () => {
+  const toggleMerchantStatus = async () => {
     const newStatus = !merchantOpen;
     setMerchantOpen(newStatus);
-    const dbMerchant = mockDB.merchants.find(m => m.userId === user.id);
-    if(dbMerchant) dbMerchant.openStatus = newStatus;
+    if(currentMerchant) {
+       await updateDoc(doc(db, "merchants", currentMerchant.id), { openStatus: newStatus });
+       setCurrentMerchant({...currentMerchant, openStatus: newStatus});
+    }
   };
 
   useEffect(() => {
-    // Load categories
-    const cats = mockDB.merchant_categories ? mockDB.merchant_categories.filter(c => c.merchantId === user.id) : [];
-    setCategories(cats);
+    // Fetch current merchant details
+    const fetchMerchant = async () => {
+       const q = query(collection(db, "merchants"), where("userId", "==", user.id));
+       const snap = await getDocs(q);
+       if(!snap.empty) {
+          const mData = { id: snap.docs[0].id, ...snap.docs[0].data() };
+          setCurrentMerchant(mData);
+          setMerchantOpen(mData.openStatus !== false);
+          setUpiInput(mData.upiId || '');
+       }
+    };
+    fetchMerchant();
 
-    // Loat menu items
-    const items = mockDB.menu_items.filter(i => i.merchantId === user.id);
-    setMenuItems(items);
+    firebaseDBService.getMerchantCategories(user.id).then(setCategories);
+    firebaseDBService.getMenuItems(user.id).then(setMenuItems);
 
-    // Initial Orders load
-    dbService.getOrdersForMerchant(user.id).then(setOrders);
+    firebaseDBService.getOrdersForMerchant(user.id).then(setOrders);
 
-    // Real-time listener for new orders
-    const unsubscribe = dbService.listenToOrders(user.id, (newOrder) => {
-      setOrders(prev => [...prev, newOrder]);
-      setNotifications(prev => [...prev, `New order received (#${newOrder.id})! Placed at ${new Date().toLocaleTimeString()}`]);
-    });
-
-    return unsubscribe;
+    // No real-time listener setup for simplicity in this migration, could add onSnapshot later.
   }, [user.id]);
 
-  const handleAddCategory = (e) => {
+  const handleAddCategory = async (e) => {
     e.preventDefault();
     if(!newCategoryName.trim()) return;
-    const cat = { id: 'c' + Date.now(), merchantId: user.id, name: newCategoryName };
-    if(!mockDB.merchant_categories) mockDB.merchant_categories = [];
-    mockDB.merchant_categories.push(cat);
-    setCategories([...categories, cat]);
-    setNewCategoryName('');
+    const cat = { merchantId: user.id, name: newCategoryName };
+    try {
+      const added = await firebaseDBService.addMerchantCategory(cat);
+      setCategories([...categories, added]);
+      setNewCategoryName('');
+    } catch(err) { alert(err.message); }
   };
 
-  const handleAddItem = (e) => {
+  const handleAddItem = async (e) => {
     e.preventDefault();
     if(!newItem.categoryId) {
       alert("Please select or create a category first.");
       return;
     }
     const item = { 
-      id: 'i' + Date.now(), 
       merchantId: user.id, 
       categoryId: newItem.categoryId,
       name: newItem.name, 
@@ -79,27 +86,41 @@ export default function MerchantDashboard() {
       imageUrl: newItem.imageUrl,
       isAvailable: true 
     };
-    mockDB.menu_items.push(item);
-    setMenuItems([...menuItems, item]);
-    setNewItem({ name: '', price: '', categoryId: newItem.categoryId, imageUrl: '' });
+    try {
+      const added = await firebaseDBService.addMenuItem(item);
+      setMenuItems([...menuItems, added]);
+      setNewItem({ name: '', price: '', categoryId: newItem.categoryId, imageUrl: '' });
+    } catch(err) { alert(err.message); }
   };
 
-  const toggleAvailability = (itemId) => {
-    setMenuItems(menuItems.map(item => {
-      if(item.id === itemId) {
-        const updated = { ...item, isAvailable: !item.isAvailable };
-        const dbItem = mockDB.menu_items.find(i => i.id === itemId);
-        if(dbItem) dbItem.isAvailable = updated.isAvailable;
-        return updated;
-      }
-      return item;
-    }));
+  const toggleAvailability = async (itemId) => {
+    const item = menuItems.find(i => i.id === itemId);
+    if(!item) return;
+    const newStatus = !item.isAvailable;
+    
+    setMenuItems(menuItems.map(i => i.id === itemId ? { ...i, isAvailable: newStatus } : i));
+    try {
+       await firebaseDBService.updateMenuItem(itemId, { isAvailable: newStatus });
+    } catch(err) { console.error(err); }
   };
 
-  const updateOrderStatus = (orderId, newStatus) => {
+  const updateOrderStatus = async (orderId, newStatus) => {
     setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
-    const dbOrder = mockDB.orders.find(o => o.id === orderId);
-    if(dbOrder) dbOrder.status = newStatus;
+    try {
+       await firebaseDBService.updateOrderStatus(orderId, newStatus);
+    } catch(err) { console.error(err); }
+  };
+
+  const handleUpdateUpi = async (e) => {
+    e.preventDefault();
+    try {
+      await updateDoc(doc(db, "merchants", currentMerchant.id), { upiId: upiInput });
+      setCurrentMerchant({ ...currentMerchant, upiId: upiInput });
+      setIsEditingUpi(false);
+      alert("UPI ID updated successfully!");
+    } catch (err) {
+      alert("Failed to update UPI ID");
+    }
   };
 
   // Computations
@@ -173,6 +194,40 @@ export default function MerchantDashboard() {
            <div style={{ padding: '16px', background: 'white', borderRadius: '50%', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
              <TrendingUp size={32} color="var(--primary)" />
            </div>
+        </div>
+
+        {/* UPI ID Management */}
+        <div className="card">
+           <h3 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <DollarSign size={20} color="var(--primary)" /> Payment Settings
+           </h3>
+           <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+              Set your UPI ID so delivery boys can collect payments via QR code.
+           </p>
+           
+           {isEditingUpi ? (
+             <form onSubmit={handleUpdateUpi} style={{ display: 'flex', gap: '12px' }}>
+               <input 
+                 placeholder="yourname@bank" 
+                 value={upiInput} 
+                 onChange={e => setUpiInput(e.target.value)} 
+                 required 
+                 style={{ flex: 1 }}
+               />
+               <button type="submit" className="btn btn-primary">Save</button>
+               <button type="button" className="btn btn-outline" onClick={() => setIsEditingUpi(false)}>Cancel</button>
+             </form>
+           ) : (
+             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: 'var(--bg-color)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+               <div>
+                 <span style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'block' }}>Current UPI ID</span>
+                 <strong style={{ fontSize: '16px' }}>{currentMerchant?.upiId || 'Not Set'}</strong>
+               </div>
+               <button className="btn btn-outline" style={{ fontSize: '13px' }} onClick={() => setIsEditingUpi(true)}>
+                 {currentMerchant?.upiId ? 'Change' : 'Set UPI ID'}
+               </button>
+             </div>
+           )}
         </div>
       </div>
       )}
