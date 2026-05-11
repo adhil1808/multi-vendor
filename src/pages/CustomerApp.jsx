@@ -20,6 +20,7 @@ export default function CustomerApp() {
 
   const [checkoutStep, setCheckoutStep] = useState(0); // 0: off, 1: review, 2: delivery, 3: payment
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
 
   useEffect(() => {
     firebaseDBService.getAllMerchants().then(setMerchants);
@@ -29,6 +30,13 @@ export default function CustomerApp() {
       setSystemBanners(banners.filter(b => b.isActive));
     });
   }, []);
+
+  // Automatically detect and set the default address when user logs in
+  useEffect(() => {
+    if (user?.addresses?.length > 0 && (!selectedAddress || selectedAddress === '')) {
+      setSelectedAddress(user.addresses[0]);
+    }
+  }, [user]);
 
   const selectMerchant = (m) => {
     setSelectedMerchant(m);
@@ -45,11 +53,11 @@ export default function CustomerApp() {
   const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
   const deliveryFee = cart.length > 0 ? 40 : 0; // Flat ₹40 delivery
   let discountAmount = 0;
-  if (activeOffer && cart.length > 0) {
-      if (activeOffer.type === 'PERCENTAGE') {
-          discountAmount = subtotal * (activeOffer.amount / 100);
-      } else if (activeOffer.type === 'FLAT') {
-          discountAmount = activeOffer.amount;
+  if (appliedCoupon && cart.length > 0) {
+      if (appliedCoupon.type === 'PERCENTAGE') {
+          discountAmount = subtotal * (appliedCoupon.amount / 100);
+      } else if (appliedCoupon.type === 'FLAT') {
+          discountAmount = appliedCoupon.amount;
       }
       if (discountAmount > subtotal) discountAmount = subtotal;
   }
@@ -86,7 +94,9 @@ export default function CustomerApp() {
                 <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Delivering to</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
                     <MapPin size={14} color="var(--primary)" /> 
-                    <span style={{ fontSize: '14px' }}>{user?.addresses?.[0] || 'Home'}</span>
+                    <span style={{ fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' }}>
+                        {selectedAddress || (user ? 'Select Address' : 'Add Address')}
+                    </span>
                 </div>
             </div>
         </div>
@@ -157,17 +167,59 @@ export default function CustomerApp() {
                     <span>Delivery Fee</span>
                     <span>₹{deliveryFee.toFixed(2)}</span>
                   </div>
-                  {activeOffer && discountAmount > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#10B981', fontWeight: '700', marginBottom: '8px' }}>
-                    <span>Discount ({activeOffer.code})</span>
-                    <span>-₹{discountAmount.toFixed(2)}</span>
-                  </div>
+                  {appliedCoupon && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#10B981', fontWeight: '700', marginBottom: '8px' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Tag size={14} /> Coupon ({appliedCoupon.code})
+                        <button onClick={() => setAppliedCoupon(null)} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: '11px', cursor: 'pointer', padding: 0 }}>Remove</button>
+                      </span>
+                      <span>-₹{discountAmount.toFixed(2)}</span>
+                    </div>
                   )}
                   <div style={{ borderTop: '1px solid var(--border)', margin: '12px 0' }} />
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '800', fontSize: '20px' }}>
                     <span>Grand Total</span>
                     <span style={{ color: 'var(--primary)' }}>₹{finalTotal.toFixed(2)}</span>
                   </div>
+                </div>
+
+                {/* Manual Coupon Section */}
+                <div style={{ marginBottom: '24px' }}>
+                   <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                     <Tag size={20} color="var(--primary)" /> Available Coupons
+                   </h3>
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {offers.filter(o => o.merchantId === selectedMerchant?.userId || o.merchantId === 'ALL').map((offer, idx) => (
+                        <div 
+                          key={offer.id} 
+                          style={{ 
+                            padding: '16px', 
+                            borderRadius: '16px', 
+                            border: `2px dashed ${appliedCoupon?.id === offer.id ? 'var(--primary)' : 'var(--border)'}`, 
+                            background: appliedCoupon?.id === offer.id ? 'var(--primary-light)' : 'white',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                          }}
+                          onClick={() => setAppliedCoupon(offer)}
+                        >
+                          <div>
+                            <span style={{ fontWeight: '800', color: 'var(--primary)', fontSize: '14px', background: 'white', padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--primary)', marginBottom: '4px', display: 'inline-block' }}>{offer.code}</span>
+                            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>{offer.discountText}</p>
+                          </div>
+                          {appliedCoupon?.id === offer.id ? (
+                            <CheckCircle size={20} color="var(--primary)" />
+                          ) : (
+                            <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '12px' }}>Apply</button>
+                          )}
+                        </div>
+                      ))}
+                      {offers.filter(o => o.merchantId === selectedMerchant?.userId || o.merchantId === 'ALL').length === 0 && (
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>No coupons available right now.</p>
+                      )}
+                   </div>
                 </div>
                 <button className="btn btn-primary" style={{ width: '100%', padding: '16px', fontSize: '16px' }} onClick={() => setCheckoutStep(2)}>
                    Confirm Items & Proceed
