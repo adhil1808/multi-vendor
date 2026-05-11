@@ -78,10 +78,24 @@ export default function CustomerApp() {
 
   const TopNav = () => (
     <div className="glass-nav" style={{ position: 'sticky', top: 0, zIndex: 100, padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '-24px -24px 24px -24px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>Delivering to</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
-                <MapPin size={16} color="var(--primary)" /> 
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            {cart.length > 0 && (
+              <div 
+                className="animate-fade-in"
+                style={{ position: 'relative', cursor: 'pointer', background: 'var(--primary-light)', padding: '10px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                onClick={() => setCheckoutStep(1)}
+              >
+                <ShoppingBag size={20} color="var(--primary)" />
+                <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: 'var(--primary)', color: 'white', borderRadius: '50%', width: '20px', height: '20px', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', border: '2px solid white' }}>
+                  {cart.length}
+                </span>
+              </div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>Delivering to</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
+                    <MapPin size={16} color="var(--primary)" /> 
+                </div>
             </div>
         </div>
         <button className="btn btn-outline" style={{ padding: '8px 12px', borderRadius: '12px' }} onClick={() => navigate(user ? '/customer/profile' : '/login')}>
