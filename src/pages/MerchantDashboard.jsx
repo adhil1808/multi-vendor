@@ -3,7 +3,7 @@ import { firebaseDBService } from '../services/firebaseDB';
 import { db } from '../firebase';
 import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { useAuth } from '../AuthContext';
-import { Plus, BellRing, CheckCircle, Image as ImageIcon, Power, TrendingUp, DollarSign } from 'lucide-react';
+import { Plus, BellRing, CheckCircle, Image as ImageIcon, Power, TrendingUp, DollarSign, Pencil, Trash2 } from 'lucide-react';
 
 export default function MerchantDashboard() {
   const { user } = useAuth();
@@ -26,6 +26,9 @@ export default function MerchantDashboard() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isEditingUpi, setIsEditingUpi] = useState(false);
   const [upiInput, setUpiInput] = useState('');
+
+  // Editing state
+  const [editingItem, setEditingItem] = useState(null);
 
   const [currentMerchant, setCurrentMerchant] = useState(null);
   const [merchantOpen, setMerchantOpen] = useState(true);
@@ -109,6 +112,29 @@ export default function MerchantDashboard() {
     try {
        await firebaseDBService.updateOrderStatus(orderId, newStatus);
     } catch(err) { console.error(err); }
+  };
+
+  const handleUpdateItem = async (e) => {
+    e.preventDefault();
+    try {
+       const updatedData = {
+         name: editingItem.name,
+         price: Number(editingItem.price),
+         categoryId: editingItem.categoryId,
+         imageUrl: editingItem.imageUrl
+       };
+       await firebaseDBService.updateMenuItem(editingItem.id, updatedData);
+       setMenuItems(menuItems.map(i => i.id === editingItem.id ? { ...i, ...updatedData } : i));
+       setEditingItem(null);
+       alert("Item updated successfully!");
+    } catch(err) { alert(err.message); }
+  };
+
+  const handleDeleteItem = async (itemId) => {
+    try {
+       await firebaseDBService.deleteMenuItem(itemId);
+       setMenuItems(menuItems.filter(i => i.id !== itemId));
+    } catch(err) { alert(err.message); }
   };
 
   const handleUpdateUpi = async (e) => {
@@ -293,10 +319,13 @@ export default function MerchantDashboard() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                       <span style={{ fontWeight: 'bold', color: 'var(--primary)', fontSize: '16px' }}>₹{item.price.toFixed(2)}</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 'bold', color: item.isAvailable ? '#065F46' : 'var(--text-secondary)' }}>
-                           {item.isAvailable ? 'Available' : 'Turned Off'}
-                        </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button className="btn btn-outline" style={{ padding: '6px' }} onClick={() => setEditingItem(item)}>
+                          <Pencil size={14} />
+                        </button>
+                        <button className="btn btn-outline" style={{ padding: '6px', color: 'red' }} onClick={() => handleDeleteItem(item.id)}>
+                          <Trash2 size={14} />
+                        </button>
                         <div 
                            onClick={() => toggleAvailability(item.id)}
                            style={{ width: '44px', height: '24px', borderRadius: '12px', background: item.isAvailable ? '#10B981' : '#D1D5DB', position: 'relative', cursor: 'pointer', transition: 'background 0.3s' }}
@@ -452,6 +481,54 @@ export default function MerchantDashboard() {
                 <CheckCircle size={20} /> Mark as Delivered
               </button>
             )}
+          </div>
+        </div>
+      )}
+      {/* Edit Item Modal */}
+      {editingItem && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setEditingItem(null)}>
+          <div className="card animate-scale-in" style={{ width: '90%', maxWidth: '450px' }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ marginBottom: '16px' }}>Edit Menu Item</h3>
+            <form onSubmit={handleUpdateItem} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Item Name</label>
+                <input 
+                  value={editingItem.name} 
+                  onChange={e => setEditingItem({...editingItem, name: e.target.value})} 
+                  required 
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Price (₹)</label>
+                <input 
+                  type="number" 
+                  value={editingItem.price} 
+                  onChange={e => setEditingItem({...editingItem, price: e.target.value})} 
+                  required 
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Category</label>
+                <select 
+                  value={editingItem.categoryId} 
+                  onChange={e => setEditingItem({...editingItem, categoryId: e.target.value})} 
+                  required
+                >
+                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Image URL</label>
+                <input 
+                  value={editingItem.imageUrl} 
+                  onChange={e => setEditingItem({...editingItem, imageUrl: e.target.value})} 
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Update Item</button>
+                <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setEditingItem(null)}>Cancel</button>
+              </div>
+            </form>
           </div>
         </div>
       )}
