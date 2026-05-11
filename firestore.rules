@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    function hasRole(role) {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
+    // Orders: Anyone can read if they are part of it. Admin can read all.
+    match /orders/{orderId} {
+      allow create: if isSignedIn();
+      allow read: if isSignedIn() && (
+        isOwner(resource.data.customerId) || 
+        isOwner(resource.data.merchantId) || 
+        isOwner(resource.data.deliveryBoyId) || 
+        hasRole('SUPER_ADMIN')
+      );
+      allow update: if isSignedIn(); 
+    }
+
+    // Merchants: Publicly readable for customer app. Editable by Super Admin and the Merchant itself.
+    match /merchants/{merchantId} {
+      allow read: if true;
+      allow write: if isSignedIn() && (isOwner(resource.data.userId) || hasRole('SUPER_ADMIN'));
+    }
+
+    // Menu Items: Publicly readable. Editable by Merchant and Super Admin.
+    match /menu_items/{itemId} {
+      allow read: if true;
+      allow write: if isSignedIn() && (isOwner(resource.data.merchantId) || hasRole('SUPER_ADMIN'));
+    }
+
+    // Categories: Publicly readable. Editable by Merchant.
+    match /merchant_categories/{catId} {
+      allow read: if true;
+      allow write: if isSignedIn() && (isOwner(resource.data.merchantId) || hasRole('SUPER_ADMIN'));
+    }
+
+    // System Banners: Publicly readable. Only Super Admin can write.
+    match /systemBanners/{bannerId} {
+      allow read: if true;
+      allow write: if isSignedIn() && hasRole('SUPER_ADMIN');
+    }
+
+    // Offers: Publicly readable. Only Super Admin can write.
+    match /offers/{offerId} {
+      allow read: if true;
+      allow write: if isSignedIn() && hasRole('SUPER_ADMIN');
+    }
+
+    // Users: Readable by signed-in users. Editable only by self or Super Admin.
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && (isOwner(userId) || hasRole('SUPER_ADMIN'));
+    }
+  }
+}

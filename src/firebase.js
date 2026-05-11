@@ -5,13 +5,13 @@ import { getAuth } from "firebase/auth";
 
 // TODO: Replace with your actual Firebase project config credentials
 const firebaseConfig = {
-  apiKey: "AIzaSyBFWLzQLf_TR4ullXg64MR_7L_rD1-9d3w",
-  authDomain: "multi-vendor-food-a37b4.firebaseapp.com",
-  projectId: "multi-vendor-food-a37b4",
-  storageBucket: "multi-vendor-food-a37b4.firebasestorage.app",
-  messagingSenderId: "614481254834",
-  appId: "1:614481254834:web:1bc1f1e9d39b50e76a6cab",
-  measurementId: "G-K3WCN397JR"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
