@@ -24,6 +24,15 @@ class ErrorBoundary extends Component {
     return this.props.children;
   }
 }
+
+const NotFound = () => (
+  <div style={{ height: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+    <h1 style={{ fontSize: '64px', color: 'var(--primary)', marginBottom: '16px' }}>404</h1>
+    <h2 style={{ marginBottom: '24px' }}>Page Not Found</h2>
+    <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>The page you are looking for doesn't exist or has been moved.</p>
+    <Navigate to="/" className="btn btn-primary">Go to Home</Navigate>
+  </div>
+);
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './AuthContext';
 import Layout from './components/Layout';
@@ -49,7 +58,11 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 const RoleBasedHome = () => {
   const { user, loading } = useAuth();
   
-  if (loading) return null; // Wait for auth to resolve
+  if (loading) return (
+    <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="animate-pulse" style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '24px' }}>Fooddiees...</div>
+    </div>
+  );
   if (!user) return <CustomerApp />;
 
   switch (user.role) {
@@ -98,6 +111,8 @@ function App() {
               </ProtectedRoute>
             } />
           </Route>
+
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
