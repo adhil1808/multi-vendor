@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
-import { dbService, mockDB } from '../mockDB';
+import { firebaseDBService } from '../services/firebaseDB';
 import { User, MapPin, Plus, Trash2, ArrowLeft, LogOut, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,9 +14,11 @@ export default function CustomerProfile() {
   const [newAddress, setNewAddress] = useState('');
   
   const [pastOrders, setPastOrders] = useState([]);
+  const [merchants, setMerchants] = useState([]);
 
   useEffect(() => {
-    dbService.getOrdersForCustomer(user.id).then(setPastOrders);
+    firebaseDBService.getOrdersForCustomer(user.id).then(setPastOrders);
+    firebaseDBService.getAllMerchants().then(setMerchants);
   }, [user.id]);
 
   const handleSaveProfile = async (e) => {
@@ -119,7 +121,7 @@ export default function CustomerProfile() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {pastOrders.map((order, idx) => {
-                 const merchant = mockDB.merchants.find(m => m.userId === order.merchantId) || { restaurantName: 'Unknown Restaurant' };
+                 const merchant = merchants.find(m => m.userId === order.merchantId) || { restaurantName: 'Unknown Restaurant' };
                  return (
                  <div key={order.id} className="animate-fade-in-up" style={{ animationDelay: `${idx * 0.05}s`, display: 'flex', flexDirection: 'column', gap: '16px', border: '1px solid var(--border)', padding: '20px', borderRadius: '12px', background: 'white', boxShadow: 'var(--shadow-sm)' }}>
                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

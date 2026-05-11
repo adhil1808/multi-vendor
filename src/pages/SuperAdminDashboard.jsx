@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { firebaseDBService } from '../services/firebaseDB';
-import { firebaseDBService } from '../services/firebaseDB';
 import { Plus, Trash2, TrendingUp, DollarSign, ShoppingBag, Activity, Tag, Image as ImageIcon, MapPin, Store } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { GoogleMap, useJsApiLoader, Marker, Autocomplete } from '@react-google-maps/api';
