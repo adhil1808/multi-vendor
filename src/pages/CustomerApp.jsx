@@ -265,10 +265,11 @@ export default function CustomerApp() {
                        <span style={{ color: '#DC2626', fontWeight: 'bold', fontSize: '13px', padding: '6px 12px', background: '#FEE2E2', borderRadius: 'var(--radius-full)' }}>Unavailable</span>
                      )}
                   </div>
-                </div>              {menuItems.length === 0 && <p style={{ color: 'var(--text-secondary)' }}>This merchant hasn't added any items yet.</p>}
+                </div>
+              ))}
+              {menuItems.length === 0 && <p style={{ color: 'var(--text-secondary)' }}>This merchant hasn't added any items yet.</p>}
             </div>
           </div>
-        </div>
 
         {/* Cart Slide-out Drawer */}
         {isCartOpen && (
@@ -341,6 +342,44 @@ export default function CustomerApp() {
                     </button>
                  </div>
                )}
+            </div>
+          </div>
+        )}
+        {/* Floating Bottom Cart Bar (Premium Pill Design) */}
+        {cart.length > 0 && checkoutStep === 0 && (
+          <div 
+            className="animate-fade-in-up"
+            style={{ 
+              position: 'fixed', 
+              bottom: '32px', 
+              left: '50%', 
+              transform: 'translateX(-50%)', 
+              width: 'min(480px, 92%)', 
+              background: 'linear-gradient(135deg, #1F2937 0%, #111827 100%)', 
+              color: 'white', 
+              padding: '16px 24px', 
+              borderRadius: '24px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              boxShadow: '0 20px 50px -12px rgba(0,0,0,0.5)', 
+              zIndex: 1000, 
+              cursor: 'pointer',
+              border: '1px solid rgba(255,255,255,0.08)'
+            }}
+            onClick={() => setCheckoutStep(1)}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+               <div style={{ background: 'var(--primary)', padding: '10px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px var(--primary-glow)' }}>
+                  <ShoppingBag size={22} color="white" />
+               </div>
+               <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '12px', opacity: 0.7, fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{cart.length} {cart.length === 1 ? 'item' : 'items'}</span>
+                  <span style={{ fontSize: '20px', fontWeight: '800' }}>₹{finalTotal.toFixed(2)}</span>
+               </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '800', fontSize: '15px', background: 'rgba(255,255,255,0.1)', padding: '10px 18px', borderRadius: '16px', transition: 'all 0.2s' }}>
+              View Cart <ChevronRight size={18} />
             </div>
           </div>
         )}
