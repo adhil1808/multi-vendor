@@ -48,11 +48,16 @@ export default function SuperAdminDashboard() {
   const [editingMerchantUpi, setEditingMerchantUpi] = useState(null); // { userId, restaurantName, upiId }
   const [upiEditValue, setUpiEditValue] = useState('');
 
-  // Delivery creation states
-  const [newDeliveryName, setNewDeliveryName] = useState('');
-  const [newDeliveryEmail, setNewDeliveryEmail] = useState('');
   const [newDeliveryPhone, setNewDeliveryPhone] = useState('');
   const [newDeliveryVehicle, setNewDeliveryVehicle] = useState('');
+
+  // Merchant Menu Editing states
+  const [editingMerchantMenu, setEditingMerchantMenu] = useState(null); // { userId, restaurantName }
+  const [merchantMenuTab, setMerchantMenuTab] = useState('view'); // 'view', 'add'
+  const [tempMenuItems, setTempMenuItems] = useState([]);
+  const [tempCategories, setTempCategories] = useState([]);
+  const [newMenuItem, setNewMenuItem] = useState({ name: '', price: '', categoryId: '', imageUrl: '' });
+  const [newMenuCategory, setNewMenuCategory] = useState('');
 
   // Analytics State
   const [stats, setStats] = useState({ totalRevenue: 0, aov: 0, totalOrders: 0 });
@@ -272,6 +277,65 @@ export default function SuperAdminDashboard() {
     }
   }
 
+  const openMenuEditor = async (merchant) => {
+    setEditingMerchantMenu(merchant);
+    try {
+      const [items, cats] = await Promise.all([
+        firebaseDBService.getMenuItems(merchant.userId),
+        firebaseDBService.getMerchantCategories(merchant.userId)
+      ]);
+      setTempMenuItems(items);
+      setTempCategories(cats);
+    } catch (err) {
+      alert("Failed to load menu: " + err.message);
+    }
+  };
+
+  const handleAddTempCategory = async (e) => {
+    e.preventDefault();
+    if(!newMenuCategory.trim()) return;
+    try {
+      const added = await firebaseDBService.addMerchantCategory({ merchantId: editingMerchantMenu.userId, name: newMenuCategory });
+      setTempCategories([...tempCategories, added]);
+      setNewMenuCategory('');
+    } catch(err) { alert(err.message); }
+  };
+
+  const handleAddTempItem = async (e) => {
+    e.preventDefault();
+    if(!newMenuItem.categoryId) return alert("Select a category");
+    const item = { 
+      merchantId: editingMerchantMenu.userId, 
+      categoryId: newMenuItem.categoryId,
+      name: newMenuItem.name, 
+      price: Number(newMenuItem.price), 
+      imageUrl: newMenuItem.imageUrl,
+      isAvailable: true 
+    };
+    try {
+      const added = await firebaseDBService.addMenuItem(item);
+      setTempMenuItems([...tempMenuItems, added]);
+      setNewMenuItem({ name: '', price: '', categoryId: newMenuItem.categoryId, imageUrl: '' });
+      setMerchantMenuTab('view');
+    } catch(err) { alert(err.message); }
+  };
+
+  const toggleTempAvailability = async (itemId) => {
+    const item = tempMenuItems.find(i => i.id === itemId);
+    if(!item) return;
+    const newStatus = !item.isAvailable;
+    setTempMenuItems(tempMenuItems.map(i => i.id === itemId ? { ...i, isAvailable: newStatus } : i));
+    await firebaseDBService.updateMenuItem(itemId, { isAvailable: newStatus });
+  };
+
+  const deleteTempItem = async (itemId) => {
+    if(!window.confirm("Delete this item?")) return;
+    try {
+      await firebaseDBService.deleteMenuItem(itemId);
+      setTempMenuItems(tempMenuItems.filter(i => i.id !== itemId));
+    } catch(err) { alert(err.message); }
+  };
+
   const onMapClick = useCallback((e) => {
     setNewMerchantLocation({ lat: e.latLng.lat(), lng: e.latLng.lng() });
   }, []);
@@ -406,9 +470,14 @@ export default function SuperAdminDashboard() {
                   </div>
                 </td>
                 <td style={{ padding: '12px 8px' }}>
-                  <button className="btn btn-outline hover-scale" style={{ padding: '6px 12px', color: 'red', borderColor: 'red' }} onClick={() => handleDeleteMerchant(m.userId)}>
-                    <Trash2 size={16} /> Delete
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => openMenuEditor(m)}>
+                      Menu
+                    </button>
+                    <button className="btn btn-outline hover-scale" style={{ padding: '6px 12px', color: 'red', borderColor: 'red' }} onClick={() => handleDeleteMerchant(m.userId)}>
+                      <Trash2 size={16} /> Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -669,6 +738,79 @@ export default function SuperAdminDashboard() {
                 <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setEditingMerchantUpi(null)}>Cancel</button>
               </div>
             </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Menu Editor Modal */}
+      {editingMerchantMenu && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: '20px' }} onClick={() => setEditingMerchantMenu(null)}>
+          <div className="card animate-scale-in" style={{ maxWidth: '800px', width: '100%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0 }}>Menu Management: {editingMerchantMenu.restaurantName}</h3>
+              <button className="btn btn-outline" onClick={() => setEditingMerchantMenu(null)}>&times;</button>
+            </div>
+
+            <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', gap: '12px' }}>
+               <button className="btn" style={{ background: merchantMenuTab === 'view' ? 'var(--primary)' : 'transparent', color: merchantMenuTab === 'view' ? 'white' : 'var(--text-secondary)' }} onClick={() => setMerchantMenuTab('view')}>View Inventory</button>
+               <button className="btn" style={{ background: merchantMenuTab === 'add' ? 'var(--primary)' : 'transparent', color: merchantMenuTab === 'add' ? 'white' : 'var(--text-secondary)' }} onClick={() => setMerchantMenuTab('add')}>Add New Item</button>
+               <button className="btn" style={{ background: merchantMenuTab === 'cat' ? 'var(--primary)' : 'transparent', color: merchantMenuTab === 'cat' ? 'white' : 'var(--text-secondary)' }} onClick={() => setMerchantMenuTab('cat')}>Categories</button>
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+               {merchantMenuTab === 'cat' && (
+                 <div className="animate-fade-in">
+                    <form onSubmit={handleAddTempCategory} style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                       <input placeholder="New Category Name" value={newMenuCategory} onChange={e => setNewMenuCategory(e.target.value)} required />
+                       <button className="btn btn-primary" type="submit">Add</button>
+                    </form>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                       {tempCategories.map(c => <span key={c.id} style={{ padding: '6px 12px', background: 'var(--bg-color)', borderRadius: '16px', fontSize: '14px', border: '1px solid var(--border)' }}>{c.name}</span>)}
+                    </div>
+                 </div>
+               )}
+
+               {merchantMenuTab === 'add' && (
+                 <form onSubmit={handleAddTempItem} className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <select value={newMenuItem.categoryId} onChange={e => setNewMenuItem({...newMenuItem, categoryId: e.target.value})} required>
+                       <option value="">Select Category</option>
+                       {tempCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                    <input placeholder="Item Name" value={newMenuItem.name} onChange={e => setNewMenuItem({...newMenuItem, name: e.target.value})} required />
+                    <input type="number" placeholder="Price (₹)" value={newMenuItem.price} onChange={e => setNewMenuItem({...newMenuItem, price: e.target.value})} required />
+                    <input placeholder="Image URL (Optional)" value={newMenuItem.imageUrl} onChange={e => setNewMenuItem({...newMenuItem, imageUrl: e.target.value})} />
+                    <button className="btn btn-primary" type="submit">Add to Menu</button>
+                 </form>
+               )}
+
+               {merchantMenuTab === 'view' && (
+                 <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {tempMenuItems.map(item => {
+                       const cat = tempCategories.find(c => c.id === item.categoryId);
+                       return (
+                         <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                               <div style={{ width: '40px', height: '40px', background: `url(${item.imageUrl || ''}) center/cover gray`, borderRadius: '4px' }} />
+                               <div>
+                                  <div style={{ fontWeight: 'bold' }}>{item.name}</div>
+                                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{cat ? cat.name : 'No Category'}</div>
+                               </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                               <div style={{ fontWeight: 'bold' }}>₹{item.price}</div>
+                               <button className={`btn ${item.isAvailable ? 'btn-primary' : 'btn-outline'}`} style={{ fontSize: '11px', padding: '4px 8px' }} onClick={() => toggleTempAvailability(item.id)}>
+                                  {item.isAvailable ? 'Available' : 'Disabled'}
+                                </button>
+                               <button className="btn btn-outline" style={{ color: 'red', border: 'none' }} onClick={() => deleteTempItem(item.id)}><Trash2 size={16}/></button>
+                            </div>
+                         </div>
+                       )
+                    })}
+                    {tempMenuItems.length === 0 && <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>Menu is empty.</p>}
+                 </div>
+               )}
+            </div>
           </div>
         </div>,
         document.body
