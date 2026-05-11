@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { firebaseDBService } from '../services/firebaseDB';
 import { useAuth } from '../AuthContext';
-import { ShoppingBag, ArrowLeft, Settings, Star, Clock, MapPin, Tag, ChevronRight, CheckCircle } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, Settings, Star, Clock, MapPin, Tag, ChevronRight, CheckCircle, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function CustomerApp() {
