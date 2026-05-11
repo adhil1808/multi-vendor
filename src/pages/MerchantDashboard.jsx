@@ -3,7 +3,7 @@ import { firebaseDBService } from '../services/firebaseDB';
 import { db } from '../firebase';
 import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { useAuth } from '../AuthContext';
-import { Plus, BellRing, CheckCircle, Image as ImageIcon, Power, TrendingUp } from 'lucide-react';
+import { Plus, BellRing, CheckCircle, Image as ImageIcon, Power, TrendingUp, DollarSign } from 'lucide-react';
 
 export default function MerchantDashboard() {
   const { user } = useAuth();
