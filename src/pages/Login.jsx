@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { Utensils } from 'lucide-react';
 
@@ -49,6 +49,9 @@ export default function Login() {
           </button>
         </form>
 
+        <p style={{ marginTop: '24px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+          Don't have an account? <Link to="/signup" style={{ color: 'var(--primary)', fontWeight: 'bold', textDecoration: 'none' }}>Create Account</Link>
+        </p>
       </div>
     </div>
   );

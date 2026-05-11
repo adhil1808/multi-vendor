@@ -35,6 +35,7 @@ import CustomerApp from './pages/CustomerApp';
 import CustomerProfile from './pages/CustomerProfile';
 import DeliveryDashboard from './pages/DeliveryDashboard';
 import AdminSetup from './pages/AdminSetup';
+import Signup from './pages/Signup';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user } = useAuth();
@@ -67,6 +68,7 @@ function App() {
         <BrowserRouter>
           <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
           <Route path="/setup-admin" element={<AdminSetup />} />
           
           <Route element={<Layout />}>

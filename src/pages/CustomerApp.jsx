@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { firebaseDBService } from '../services/firebaseDB';
 import { useAuth } from '../AuthContext';
-import { ShoppingBag, ArrowLeft, Settings, Star, Clock, MapPin, Tag, ChevronRight, CheckCircle, Trash2 } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, User, Star, Clock, MapPin, Tag, ChevronRight, CheckCircle, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function CustomerApp() {
@@ -86,9 +86,23 @@ export default function CustomerApp() {
             </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {/* Minimalist Cart Icon in Top Right */}
+            <div 
+              className="animate-fade-in"
+              style={{ position: 'relative', cursor: 'pointer', background: 'var(--primary-light)', padding: '10px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              onClick={() => setIsCartOpen(true)}
+            >
+              <ShoppingBag size={20} color="var(--primary)" />
+              {cart.length > 0 && (
+                <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: 'var(--primary)', color: 'white', borderRadius: '50%', width: '20px', height: '20px', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', border: '2px solid white' }}>
+                  {cart.length}
+                </span>
+              )}
+            </div>
+
             <button className="btn btn-outline" style={{ padding: '8px 12px', borderRadius: '12px' }} onClick={() => navigate(user ? '/customer/profile' : '/login')}>
-                <Settings size={18} /> <span className="mobile-hide">{user ? 'Profile' : 'Login'}</span>
+                <User size={18} /> <span className="mobile-hide">{user ? 'Profile' : 'Login'}</span>
             </button>
         </div>
     </div>
