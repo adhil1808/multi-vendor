@@ -269,7 +269,7 @@ export default function CustomerApp() {
           </div>
 
           {/* Beautiful Cart Sidebar */}
-          <div className="glass-panel animate-fade-in-up" style={{ alignSelf: 'start', position: 'sticky', top: '90px', padding: '28px', border: '1px solid rgba(255, 122, 40, 0.1)', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.05)' }}>
+          <div className="glass-panel animate-fade-in-up" style={{ alignSelf: 'start', padding: '28px', border: '1px solid rgba(255, 122, 40, 0.1)', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.05)' }}>
              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '22px', fontWeight: '800' }}>
                   <ShoppingBag size={24} color="var(--primary)" /> Your Order
