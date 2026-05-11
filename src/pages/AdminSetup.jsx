@@ -14,12 +14,12 @@ export default function AdminSetup() {
     setStatus('loading');
     try {
       // 1. Create in Firebase Auth
-      const userCred = await createUserWithEmailAndPassword(auth, 'adhil@fooddies.com', 'adhil@2013');
+      const userCred = await createUserWithEmailAndPassword(auth, 'adhil.admin@fooddies.com', 'adhil@2013');
       
       // 2. Create Profile in Firestore
       await setDoc(doc(db, "users", userCred.user.uid), {
         name: 'Adhil Admin',
-        email: 'adhil@fooddies.com',
+        email: 'adhil.admin@fooddies.com',
         role: 'SUPER_ADMIN',
         createdAt: new Date().toISOString()
       });

@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
       
       // Handle Super Admin shorthand
       if (identifier === 'adhil@fooddies') {
-        emailToUse = 'adhil@fooddies.com';
+        emailToUse = 'adhil.admin@fooddies.com';
       }
       
       // If the identifier doesn't look like an email, assume it's a Restaurant ID
