@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { mockDB, dbService } from '../mockDB';
+import { firebaseDBService } from '../services/firebaseDB';
 import { useAuth } from '../AuthContext';
 import { ShoppingBag, ArrowLeft, Settings, Star, Clock, MapPin, Tag, ChevronRight, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -22,8 +23,11 @@ export default function CustomerApp() {
 
   useEffect(() => {
     setMerchants(mockDB.merchants);
-    setSystemBanners(mockDB.systemBanners.filter(b => b.isActive));
     setOffers(mockDB.offers);
+    
+    firebaseDBService.getBanners().then(banners => {
+      setSystemBanners(banners.filter(b => b.isActive));
+    });
   }, []);
 
   const selectMerchant = (m) => {

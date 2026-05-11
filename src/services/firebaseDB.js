@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, addDoc, doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 
 // This file mimics the dbService structure in mockDB.js, allowing you to quickly swap imports 
@@ -48,6 +48,39 @@ export const firebaseDBService = {
       return { id: docRef.id, ...orderData, status: 'PENDING' };
     } catch (error) {
       console.error("Error placing order:", error);
+      throw error;
+    }
+  },
+
+  getBanners: async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "banners"));
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      console.error("Error fetching banners:", error);
+      return [];
+    }
+  },
+
+  addBanner: async (bannerData) => {
+    try {
+      const docRef = await addDoc(collection(db, "banners"), {
+        ...bannerData,
+        createdAt: serverTimestamp()
+      });
+      return { id: docRef.id, ...bannerData };
+    } catch (error) {
+      console.error("Error adding banner:", error);
+      throw error;
+    }
+  },
+
+  deleteBanner: async (bannerId) => {
+    try {
+      await deleteDoc(doc(db, "banners", bannerId));
+      return true;
+    } catch (error) {
+      console.error("Error deleting banner:", error);
       throw error;
     }
   }

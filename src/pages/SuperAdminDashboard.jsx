@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { mockDB, dbService } from '../mockDB';
+import { firebaseDBService } from '../services/firebaseDB';
 import { Plus, Trash2, TrendingUp, DollarSign, ShoppingBag, Activity, Tag, Image as ImageIcon, MapPin, Store } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { GoogleMap, useJsApiLoader, Marker, Autocomplete } from '@react-google-maps/api';
@@ -80,7 +81,12 @@ export default function SuperAdminDashboard() {
   useEffect(() => {
     setMerchants(mockDB.users.filter(u => u.role === 'MERCHANT'));
     setDelivery(mockDB.users.filter(u => u.role === 'DELIVERY_BOY'));
-    setGlobalBanners(mockDB.systemBanners);
+    
+    // Fetch banners from Firebase
+    firebaseDBService.getBanners().then(banners => {
+      setGlobalBanners(banners);
+    });
+
     setMerchantOffers(mockDB.offers);
     
     dbService.getAllOrders().then(allOrders => {
@@ -180,17 +186,25 @@ export default function SuperAdminDashboard() {
     setDelivery(delivery.filter(d => d.id !== id));
   };
 
-  const handleAddBanner = (e) => {
+  const handleAddBanner = async (e) => {
     e.preventDefault();
-    const b = { id: 'b'+Date.now(), imageUrl: newBannerImg, link: '#', isActive: true };
-    mockDB.systemBanners.push(b);
-    setGlobalBanners([...globalBanners, b]);
-    setNewBannerImg('');
+    const b = { imageUrl: newBannerImg, link: '#', isActive: true };
+    try {
+      const addedBanner = await firebaseDBService.addBanner(b);
+      setGlobalBanners([...globalBanners, addedBanner]);
+      setNewBannerImg('');
+    } catch (error) {
+      alert('Failed to add banner');
+    }
   };
 
-  const handleDeleteBanner = (id) => {
-    mockDB.systemBanners = mockDB.systemBanners.filter(b => b.id !== id);
-    setGlobalBanners(mockDB.systemBanners);
+  const handleDeleteBanner = async (id) => {
+    try {
+      await firebaseDBService.deleteBanner(id);
+      setGlobalBanners(globalBanners.filter(b => b.id !== id));
+    } catch (error) {
+      alert('Failed to delete banner');
+    }
   }
 
   const handleAddOffer = (e) => {
