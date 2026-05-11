@@ -14,12 +14,12 @@ export default function AdminSetup() {
     setStatus('loading');
     try {
       // 1. Create in Firebase Auth
-      const userCred = await createUserWithEmailAndPassword(auth, 'adhil@fooddiess', 'adhil@2013');
+      const userCred = await createUserWithEmailAndPassword(auth, 'adhil@fooddies.com', 'adhil@2013');
       
       // 2. Create Profile in Firestore
       await setDoc(doc(db, "users", userCred.user.uid), {
         name: 'Adhil Admin',
-        email: 'adhil@fooddiess',
+        email: 'adhil@fooddies.com',
         role: 'SUPER_ADMIN',
         createdAt: new Date().toISOString()
       });
@@ -41,7 +41,7 @@ export default function AdminSetup() {
         </div>
         <h2 style={{ fontSize: '28px', fontWeight: '800', marginBottom: '12px' }}>Super Admin Setup</h2>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
-          Click the button below to initialize the primary Super Admin account for <strong>adhil@fooddiess</strong>.
+          Click the button below to initialize the primary Super Admin account for <strong>adhil@fooddies</strong>.
         </p>
 
         {status === 'success' ? (

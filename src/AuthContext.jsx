@@ -36,8 +36,13 @@ export const AuthProvider = ({ children }) => {
     try {
       let emailToUse = identifier;
       
+      // Handle Super Admin shorthand
+      if (identifier === 'adhil@fooddies') {
+        emailToUse = 'adhil@fooddies.com';
+      }
+      
       // If the identifier doesn't look like an email, assume it's a Restaurant ID
-      if (!identifier.includes('@')) {
+      else if (!identifier.includes('@')) {
          const mQ = query(collection(db, "merchants"), where("restaurantId", "==", identifier));
          const mSnap = await getDocs(mQ);
          if (!mSnap.empty) {
